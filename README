@@ -1,0 +1,5 @@
+A simple maze game
+Build and run:
+cmake .
+make
+./linmaze
