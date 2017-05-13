@@ -184,6 +184,7 @@ void ProcessMoving()
           if (Moved[yf][xf] == 8)
           { Moved[yf][xf] = 0;
             Level[yf][xf].type = 1;
+            Optim[yf][xf] = 0;
             i=movs.erase(i);
             continue;
           }

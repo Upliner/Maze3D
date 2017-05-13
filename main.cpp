@@ -450,9 +450,9 @@ void Control()
         if (zc>CeilZ){zc=CeilZ;zi=0;}
       }
       if (KeyPressed(SDLK_j)) if (health) health--;
-      while (x<-180) x += 360;while (x> 180) x -= 360;
-      while (y< -90) y =  -90;while (y>  90) y =   90;
-      xr = (float)x;yr = (float)y;
+      while (x<-360) x += 720;while (x> 360) x -= 720;
+      while (y<-360) y = -360;while (y> 360) y =  360;
+      xr = (float)x/2;yr = (float)y/4;
 }
 
 void quit(int code)
