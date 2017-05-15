@@ -418,9 +418,11 @@ void Control()
     t1 = t2;
     t2 = SDL_GetTicks();
     ti += t2-t1;
-    if (ti < Interval) {
+    while (ti < Interval) {
+        t1 = t2;
         SDL_Delay(Interval - ti);
-        ti = Interval;
+        t2 = SDL_GetTicks();
+        ti += t2-t1;
     }
     for (;ti>=Interval;ti-=Interval)
     {

@@ -1,13 +1,8 @@
 #include "OpenGL.h"
-//#include "resarchive.h"
-//#include "Сommon.h"
 #include <stdio.h>
 #include <SDL/SDL.h>
 
 Pict *wl;
-//HGLRC rc;
-// Texture IDs
-//CResFileSystem fs;
 unsigned int wall,ground,jetpack,key,gr,hudh,font;
 
 int LoadBMP(char *filename,Pict *&surf)
@@ -299,7 +294,7 @@ int initGL()
   float color[4] = {0.6f,0.8f,0.9f,1};
   glMatrixMode( GL_PROJECTION );
   //aspect = ;
-  gluPerspective( 50, 4.0f/3.0f, 0.05, 100 );
+  gluPerspective( 50, (float)w/h, 0.05, 100 );
   glMatrixMode( GL_MODELVIEW );
   glEnable(GL_BLEND);
   glEnable(GL_LINE_SMOOTH);
