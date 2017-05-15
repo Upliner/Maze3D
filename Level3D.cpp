@@ -63,94 +63,14 @@ int TLevel(byte x,byte y)
     default:return 0;
   }
 }
-/*void RendStr(int x,int sy,int lv,int lvv)
-{ int mxl=lv;
-  int y;
-  int l;
-  for (y=sy;y<50;y++)
-  { if(((l=TLevel(x,y))>mxl)||(l<=lvv&&l==mxl))
-    { DrawLevelTile(x,y);
-      if (l>mxl)mxl=l;
-    }
-  }
-  mxl=lv;
-  for (y=sy-1;y>=0;y--)
-  { if(((l=TLevel(x,y))>mxl)||(l<=lvv&&l==mxl))
-    { DrawLevelTile(x,y);
-      if (l>mxl)mxl=l;
-    }
-  }
-} */
-void RendStr(byte sx,byte y,byte ud)
-{ if (TLevel(sx,y)>0) return;
-  short xmin,xmax;
-  for (xmin=sx;xmin>=0;xmin--)
-  { DrawLevelTile(xmin,y);
-    if (TLevel((byte)xmin,(byte)y)>0) break;
-  }
-//  if (ud&4){xmin=sx-1;}
-  for (xmax=sx+1;xmax<80;xmax++)
-  { DrawLevelTile(xmax,y);
-    if (TLevel((byte)xmax,(byte)y)>0) break;
-  }
-//  if (ud&8){xmax=sx+1;}
-  int i;
-  if (y>0&&(ud&1))
-  { for (i=xmin+1;i<xmax;i++) DrawLevelTile(i,y-1);
-    if (xmin>=0&&TLevel(xmin+1,y-1)==0) DrawLevelTile(xmin,y-1);
-    if (xmin<80&&TLevel(xmax-1,y-1)==0) DrawLevelTile(xmax,y-1);
-    if (y>1)
-    { if (TLevel(sx,y-1)==0)
-      {RendStr(sx,y-1,1);} else
-      { if (TLevel(sx-1,y-1)==0)RendStr(sx-1,y-1,1);
-        if (TLevel(sx+1,y-1)==0)RendStr(sx+1,y-1,1);
-      }
-    }
-  }
-  if (y<49&&(ud&2))
-  { for (i=xmin+1;i<xmax;i++) DrawLevelTile(i,y+1);
-    if (xmin>=0&&TLevel(xmin+1,y+1)==0) DrawLevelTile(xmin,y+1);
-    if (xmin<80&&TLevel(xmax-1,y+1)==0) DrawLevelTile(xmax,y+1);
-    if (y<48)
-    { if (TLevel(sx,y+1)==0)
-      {RendStr(sx,y+1,2);} else
-      { if (TLevel(sx-1,y+1)==0)RendStr(sx-1,y+1,2);
-        if (TLevel(sx+1,y+1)==0)RendStr(sx+1,y+1,2);
-      }
-    }
-  }
-}
 void RenderLevel()
 { glCallList(FLOOR);
   glCallList(EXTWALL);
-  int x = (int)((xc-1)*0.5),y = (int)((yc-1)*0.5)/*,level=0(int)(((zc-1)/2)+0.5)*/;
-/*  int l;
-  int cx=x,cy=y;
-  int mxl=level;
-  for (;cx>=0;)
-  { if (((l=TLevel(cx,cy))>mxl)||(l<=level&&mxl<=level)) DrawLevelTile(cx,cy);
-    if (l>mxl)mxl=l;
-    cx--;
-  }
-  cx=x-1;cy=y-1;mxl=level;*/
-//  RendStr((byte)x,(byte)y,3);
+  int x = (int)((xc-1)*0.5),y = (int)((yc-1)*0.5);
   int xm,ym;
   for (ym=max(0,(byte)y-41);ym<=min(49,(byte)y+41);ym++)
     for (xm=max(0,(byte)x-41);xm<=min(79,(byte)x+41);xm++)
       DrawLevelTile(xm,ym);
-/*  for (cx=x;cx<80;cx++)
-  { if(((l=TLevel(cx,y))>level)||(l<=mxl))
-    { RendStr(cx,y,mxl,level);
-      if (l>mxl)mxl=l;
-    }
-  }
-  mxl=level;
-  for (cx=x-1;cx>=0;cx--)
-  { if(((l=TLevel(cx,y))>level)||(l<=mxl))
-    { RendStr(cx,y,mxl,level);
-      if (l>mxl)mxl=l;
-    }
-  }*/
 }
 struct movstruct
 {
@@ -272,7 +192,7 @@ void ControlLevel()
             if((y-yi)<(yf-0.6)){yc=(float)((yf-0.6)*2)+2;continue;}
             if((y-yi)>(yf+0.6)){yc=(float)((yf+0.6)*2)+2;continue;}
             if ((x<=xf-0.599)||(x>=xf+0.599)||(y<=yf-0.599)||(y>=yf+0.599)) continue;
-            if ((Moved[yf][xf] == 0)||(Level[yf][xf].type != 2||Level[yf][xf].type != 15&&Level[yf][xf].type != 7)) {FloorZ = max(FloorZ,2);} else {if(FloorZ==0)FloorZ = (float)(2-(Moved[yf][xf]*0.0625));}
+            if ((Moved[yf][xf] == 0)||(Level[yf][xf].type != 2&&Level[yf][xf].type != 7)) {FloorZ = max(FloorZ,2);} else {if(FloorZ==0)FloorZ = (float)(2-(Moved[yf][xf]*0.0625));}
             if (Level[yf][xf].type == 14){FloorZ = max(FloorZ,4);}
             continue;
           }
@@ -294,9 +214,6 @@ void ControlLevel()
               if((x-xi)>(xf+0.6)&&Level[yf][xf+1].type!=14){xc=(float)((xf+0.6)*2)+2;continue;}
               if((y-yi)<(yf-0.6)){yc=(float)((yf-0.6)*2)+2;continue;}
               if((y-yi)>(yf+0.6)){yc=(float)((yf+0.6)*2)+2;continue;}
-              //if ((x<=xf-0.599)||(x>=xf+0.599)||(y<=yf-0.599)||(y>=yf+0.599)) continue;
-              //if ((Moved[yf][xf] == 0)||(Level[yf][xf].type != 2||Level[yf][xf].type != 15&&Level[yf][xf].type != 7)) {FloorZ = 2;} else {FloorZ = (float)(2-(Moved[yf][xf]*0.0625));}
-              //if (Level[yf][xf].type == 14){FloorZ = max(FloorZ,4);}
               return;
             }
           }
@@ -314,8 +231,6 @@ void ControlLevel()
         return;
     }
   }
-//  xf = (int)(x+0.5);yf = (int)(y+0.5);
-//  if ((Level[yf][xf].type == 9)&&((x>xf-0.3)&&(x<xf+0.3)&&(y>yf-0.3)&&(y<yf+0.3))){FloorZ = (float)(0.2-(Moved[yf][xf]*0.02));}
 }
 int TALevel(int x,int y)
 {

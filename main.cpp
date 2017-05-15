@@ -1,6 +1,5 @@
 #include <stdio.h>
 #include <stdlib.h>
-//#include <string.h>
 #include <GL/glx.h>
 #include <GL/gl.h>
 #include <GL/glu.h>
@@ -34,7 +33,6 @@ void createObjects()
       glTexCoord2s(1,0);glVertex3i(-1,-1,+1);glTexCoord2s(0,0);glVertex3i(+1,-1,+1);
       glTexCoord2s(1,1);glVertex3i(-1,+1,+1);glTexCoord2s(0,1);glVertex3i(+1,+1,+1);
     glEnd();
-    glEnd();
     glBegin(GL_TRIANGLE_STRIP);
       glTexCoord2s(1,0);glVertex3i(+1,-1,+1);glTexCoord2s(0,0);glVertex3i(+1,-1,-1);
       glTexCoord2s(1,1);glVertex3i(+1,+1,+1);glTexCoord2s(0,1);glVertex3i(+1,+1,-1);
@@ -47,10 +45,6 @@ void createObjects()
       glTexCoord2s(0,0);glVertex3i(-1,+1,-1);glTexCoord2s(1,0);glVertex3i(-1,+1,+1);
       glTexCoord2s(0,1);glVertex3i(+1,+1,-1);glTexCoord2s(1,1);glVertex3i(+1,+1,+1);
     glEnd();
-/*    glBegin(GL_TRIANGLE_STRIP);
-      glTexCoord2s(0,0);glVertex3i(-1,-1,-1);glTexCoord2s(0,1);glVertex3i(+1,-1,-1);
-      glTexCoord2s(1,0);glVertex3i(-1,-1,+1);glTexCoord2s(1,1);glVertex3i(+1,-1,+1);
-    glEnd();*/
   glEndList();
 
   glNewList(BOX_OPTIM_CEILONLY, GL_COMPILE);
@@ -76,7 +70,7 @@ void createObjects()
       }
       glEnd();
     }
-	glEnable(GL_CULL_FACE);
+    glEnable(GL_CULL_FACE);
   glEndList();
 
   glNewList(EXTWALL, GL_COMPILE);
@@ -328,15 +322,6 @@ void drawScene()
 
     glPopMatrix();
     // HUD
-/*    glEnable(GL_TEXTURE_2D); glBindTexture(GL_TEXTURE_2D,hudh);
-    glDisable(GL_DEPTH_TEST);
-    glBegin(GL_QUADS);
-    glColor3ub(255,255,255);
-    glTexCoord2s(0,0);glVertex3d(0.21,-0.2 ,-0.51);
-    glTexCoord2s(1,0);glVertex3d(0.26,-0.2 ,-0.51);
-    glTexCoord2s(1,1);glVertex3d(0.26,-0.15,-0.51);
-    glTexCoord2s(0,1);glVertex3d(0.21,-0.15,-0.51);
-    glEnd();  */
     if (!health)
     { glDisable(GL_TEXTURE_2D); glDisable(GL_DEPTH_TEST);
       glBegin(GL_QUADS);glColor4ub(255,0,0,160);glVertex3d(-2,-2,-0.051);glVertex3d(2,-2,-0.051);glVertex3d(2,2,-0.051);glVertex3d(-2,2,-0.051);glEnd();
@@ -361,10 +346,6 @@ if ((t2-t1)>0){fps = 1000/(t2-t1);}
     if (fps>=100)PDigit(-0.26,0.19,fps/100  ,255,255,255,0.01f);
     if (fps>=10) PDigit(-0.25,0.19,fps/10%10,255,255,255,0.01f);
                  PDigit(-0.24,0.19,fps%10   ,255,255,255,0.01f);
-/*int mvs=movs.size();
-    if (mvs>=100)PDigit(-0.26,0.18,mvs/100  ,255,255,255,0.01f);
-    if (mvs>=10) PDigit(-0.25,0.18,mvs/10%10,255,255,255,0.01f);
-                 PDigit(-0.24,0.18,mvs%10   ,255,255,255,0.01f);*/
     if (jet)
     { glEnable(GL_TEXTURE_2D); glBindTexture(GL_TEXTURE_2D,jetpack);
       glDisable(GL_DEPTH_TEST);
@@ -438,7 +419,6 @@ void Control()
             if (jet&&(KeyPressed(SDLK_q)||LLMouse)) {zi += 0.0055F;}
             if (LeftMouse&&wlds_s == 11) wlds_s++;
         }
-      //  if (KeyPressed(DIK_ESCAPE)) {DestroyWindow(Window);}
         if (KeyPressed(SDLK_ESCAPE)) quit(0);
         if(MouseClick&&(!health)){LoadLevel(mapname);xc=2;yc=2;xi=0;yi=0;zi=0; health=100;FloorZ=0;jet=0;}
         xc += xi;yc += yi; zc += zi;

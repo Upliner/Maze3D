@@ -1,11 +1,12 @@
 #include "OpenGL.h"
 #include <stdio.h>
 #include <SDL/SDL.h>
+#include <vector>
 
 Pict *wl;
 unsigned int wall,ground,jetpack,key,gr,hudh,font;
 
-int LoadBMP(char *filename,Pict *&surf)
+int LoadBMP(char const *filename,Pict *&surf)
 {
   surf = new Pict;
   FILE *f;
@@ -16,20 +17,18 @@ int LoadBMP(char *filename,Pict *&surf)
   if (fle.bfType != 19778) {fprintf(stderr,"LoadBMP: bfType %i is incorrect in %s\n",fle.bfType,filename);return 0;}
   fseek(f,0x0e,SEEK_SET);
   fread(&inf,1,sizeof(inf),f);
-  fseek(f,0x36/*fle.bfOffBits*/,SEEK_SET);
+  fseek(f,fle.bfOffBits,SEEK_SET);
   int w = inf.biWidth;
   int h = inf.biHeight;
   int bp = inf.biBitCount>>3;
-  int bb = w*bp;//(((w*bp)+3) & ~3);
+  int bb = w*bp;
   if (inf.biBitCount != 24){fprintf(stderr,"LoadBMP: BitDepth %i is incorrect in %s\n",inf.biBitCount,filename);
    return 0;}
-  byte *buf = new byte[bb*h];
+  std::vector<byte> vbuf(bb*h);
+  byte *buf = &vbuf[0];
   int ri=fread(buf,h,bb,f);
   if (ri!=bb)
   { fprintf(stderr,"warning: only %i lines was read from %s\n",ri,filename);
-    /*fprintf(stderr,"size:%i\n",inf.biSize);
-    fprintf(stderr,"width:%i\n",inf.biWidth);
-    fprintf(stderr,"height:%i\n",inf.biHeight);*/
   }
   surf->w = w;
   surf->h = h;
@@ -38,7 +37,6 @@ int LoadBMP(char *filename,Pict *&surf)
   int x;
   int l;
   int b;
-//  buf += bb*(h-1);
   for (int i = 0;i<(h);i++)
   {
     l = 0;
@@ -47,10 +45,9 @@ int LoadBMP(char *filename,Pict *&surf)
     Surf+= w*3;
     buf += bb;
   }
-//delete buf;
   return 1;
 }
-int LoadBMP_A(char *filename,Pict *&surf,byte r,byte g, byte b)
+int LoadBMP_A(char const *filename,Pict *&surf,byte r,byte g, byte b)
 {
   surf = new Pict;
   FILE *f;
@@ -93,9 +90,6 @@ int LoadBMP_A(char *filename,Pict *&surf,byte r,byte g, byte b)
 #define MnFilter GL_LINEAR
 int LoadTextures()
 {
-    //if (fs.OpenResFile("texture.res")==0) fail("Cannot load textures");
-
-
     glGenTextures(1,&wall);
     glGenTextures(1,&ground);
     glGenTextures(1,&jetpack);
@@ -108,7 +102,6 @@ int LoadTextures()
  //   glPixelStorei (GL_UNPACK_ALIGNMENT, 1);
 
     gluBuild2DMipmaps(GL_TEXTURE_2D,3,wl->w,wl->h,GL_RGB,GL_UNSIGNED_BYTE,wl->data);
-    //glTexImage2D (GL_TEXTURE_2D,0,3,wl->w,wl->h,0,GL_RGB,GL_UNSIGNED_BYTE,wl->data);
 
     glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_WRAP_S,GL_REPEAT);
     glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_WRAP_T,GL_REPEAT);
@@ -122,7 +115,6 @@ int LoadTextures()
     glBindTexture(GL_TEXTURE_2D,ground);
 
     gluBuild2DMipmaps(GL_TEXTURE_2D,3,wl->w,wl->h,GL_RGB,GL_UNSIGNED_BYTE,wl->data);
-    //glTexImage2D (GL_TEXTURE_2D,0,3,wl->w,wl->h,0,GL_RGB,GL_UNSIGNED_BYTE,wl->data);
 
     glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_WRAP_S,GL_REPEAT);
     glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_WRAP_T,GL_REPEAT);
@@ -137,7 +129,6 @@ int LoadTextures()
     glBindTexture(GL_TEXTURE_2D,jetpack);
 
     gluBuild2DMipmaps(GL_TEXTURE_2D,3,wl->w,wl->h,GL_RGB,GL_UNSIGNED_BYTE,wl->data);
-    //glTexImage2D (GL_TEXTURE_2D,0,3,wl->w,wl->h,0,GL_RGB,GL_UNSIGNED_BYTE,wl->data);
 
     glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_WRAP_S,GL_REPEAT);
     glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_WRAP_T,GL_REPEAT);
@@ -194,7 +185,6 @@ int LoadTextures()
     glBindTexture(GL_TEXTURE_2D,gr);
 
     gluBuild2DMipmaps(GL_TEXTURE_2D,4,wl->w,wl->h,GL_RGB,GL_UNSIGNED_BYTE,wl->data);
-    //glTexImage2D (GL_TEXTURE_2D,0,4,wl->w,wl->h,0,GL_RGB,GL_UNSIGNED_BYTE,wl->data);
 
     glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_WRAP_S,GL_REPEAT);
     glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_WRAP_T,GL_REPEAT);
@@ -209,61 +199,6 @@ int LoadTextures()
 }
 int initGL()
 {
-#ifdef WIN32
-  WNDCLASS   wndclass;
-
-  /* Register the frame class */
-  wndclass.style         = 0;
-  wndclass.lpfnWndProc   = (WNDPROC)WndProc;
-  wndclass.cbClsExtra    = 0;
-  wndclass.cbWndExtra    = 0;
-  wndclass.hInstance     = Instance;
-  wndclass.hIcon         = LoadIcon (Instance, "Win OpenGL");
-  wndclass.hCursor       = LoadCursor (NULL,IDC_ARROW);
-  wndclass.hbrBackground = (HBRUSH)(CreateSolidBrush(RGB(255,0,0)));
-  wndclass.lpszMenuName  = "Win OpenGL";
-  wndclass.lpszClassName = "Win OpenGL";
-
-  if (!RegisterClass (&wndclass) )
-      return FALSE;
-
-#ifndef _DEBUG
-  Window = CreateWindowEx(WS_EX_TOPMOST,"Win OpenGL","3D",WS_POPUP,0,0,width,height,0,0,Instance,0);
-#else
-  Window = CreateWindowEx(0,"Win OpenGL","3D",WS_POPUP,0,0,width,height,0,0,Instance,0);
-#endif
-
-  dc = GetDC(Window);
-//  GLfloat aspect;
-
-  PIXELFORMATDESCRIPTOR pfd;
-  int pixelformat;
-
-  ZeroMemory(&pfd,sizeof(PIXELFORMATDESCRIPTOR));
-  pfd.nSize = sizeof(PIXELFORMATDESCRIPTOR);
-  pfd.nVersion = 1;
-  pfd.dwFlags = PFD_DRAW_TO_WINDOW | PFD_SUPPORT_OPENGL | PFD_DOUBLEBUFFER | PFD_GENERIC_ACCELERATED;
-  pfd.dwLayerMask = PFD_MAIN_PLANE;
-  pfd.iPixelType = PFD_TYPE_RGBA;
-  pfd.cColorBits = 32;
-  pfd.cDepthBits = 24;
-  pixelformat = ChoosePixelFormat(dc, &pfd);
-
-  if ( (pixelformat = ChoosePixelFormat(dc, &pfd)) == 0 )
-  {
-    MessageBox(NULL, "ChoosePixelFormat failed", "Error", MB_OK);
-    return FALSE;
-  }
-
-  if (SetPixelFormat(dc, pixelformat, &pfd) == FALSE)
-  {
-    MessageBox(NULL, "SetPixelFormat failed", "Error", MB_OK);
-    return FALSE;
-  }
-
-  rc = wglCreateContext(dc);
-  wglMakeCurrent(dc, rc);
-#else
   if(SDL_Init(SDL_INIT_VIDEO)<0)
   {
     fprintf(stderr, "SDL initialization failed: %s\n",SDL_GetError());
@@ -286,14 +221,13 @@ int initGL()
   h = surf->h;
   SDL_ShowCursor(0);
   SDL_WarpMouse(w/2,h/2);
-#endif
+
   glClearDepth( 1.0 );
   glClearColor(0.6f,0.8f,0.9f,1);
 
   glEnable(GL_DEPTH_TEST);
   float color[4] = {0.6f,0.8f,0.9f,1};
   glMatrixMode( GL_PROJECTION );
-  //aspect = ;
   gluPerspective( 50, (float)w/h, 0.05, 100 );
   glMatrixMode( GL_MODELVIEW );
   glEnable(GL_BLEND);
@@ -308,6 +242,5 @@ int initGL()
 
   glDepthFunc(GL_LEQUAL);
   glBlendFunc(GL_SRC_ALPHA,GL_ONE_MINUS_SRC_ALPHA);
-//  ReleaseDC(Window,dc);
   return 1;
 }

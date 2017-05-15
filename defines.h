@@ -1,15 +1,5 @@
 #ifndef DEFINES_H
 #define DEFINES_H
-
-//#include <sys/types.h>
-
-//#define a PeekMessage(&msg, 0, 0, 0, PM_REMOVE);TranslateMessage(&msg);DispatchMessage(&msg);
-
-//#define wa MsgWaitForMultipleObjects(2,KMEvent,TRUE,INFINITE,QS_ALLEVENTS); PeekMessage(&msg, NULL, 0, 0, PM_REMOVE);TranslateMessage(&msg);DispatchMessage(&msg);
-//#define ka MsgWaitForMultipleObjects(1,&KMEvent[0],TRUE,INFINITE,QS_ALLEVENTS); PeekMessage(&msg, NULL, 0, 0, PM_REMOVE);TranslateMessage(&msg);DispatchMessage(&msg);
-//#define ma MsgWaitForMultipleObjects(1,&KMEvent[1],TRUE,INFINITE,QS_ALLEVENTS); PeekMessage(&msg, NULL, 0, 0, PM_REMOVE);TranslateMessage(&msg);DispatchMessage(&msg);
-
-
 #define PI 3.1415926535897932384626433832795
 #define deg (PI/180)
 
@@ -28,7 +18,6 @@
 #define TW 13
 #define GR 14
 #define BOX_OPTIM_CEILONLY 32
-//#define TW_OPTIM_BOX 14
 #define LEVELS 64
 
 #define min(a,b) ((a)<(b)?(a):(b))

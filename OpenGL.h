@@ -1,14 +1,9 @@
 #ifndef OPENGL_H
 #define OPENGL_H
 
-#ifdef WIN32
-extern HGLRC rc;
-#include <windows.h>
-#endif
 #include <GL/gl.h>
 #include <GL/glu.h>
 #include "defines.h"
-//#include "Common.h"
 
 struct Pict
 {
