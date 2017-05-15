@@ -1,6 +1,6 @@
 #include "OpenGL.h"
 #include <stdio.h>
-#include <SDL/SDL.h>
+#include <SDL2/SDL.h>
 #include <vector>
 
 Pict *wl;
@@ -197,6 +197,8 @@ int LoadTextures()
     glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
     return 1;
 }
+SDL_Window *surf;
+SDL_GLContext glctx;
 int initGL()
 {
   if(SDL_Init(SDL_INIT_VIDEO)<0)
@@ -211,16 +213,19 @@ int initGL()
   SDL_GL_SetAttribute( SDL_GL_DEPTH_SIZE, 24 );
   SDL_GL_SetAttribute( SDL_GL_DOUBLEBUFFER, 1 );
 
-  SDL_Surface *surf;
-  if((surf=SDL_SetVideoMode(0, 0, 0, SDL_OPENGL | SDL_FULLSCREEN))==0)
+  if((surf=SDL_CreateWindow("Maze3D",
+                             SDL_WINDOWPOS_UNDEFINED,
+                             SDL_WINDOWPOS_UNDEFINED,
+                             0, 0,
+                             SDL_WINDOW_FULLSCREEN_DESKTOP | SDL_WINDOW_OPENGL))==0)
   {
     fprintf(stderr, "Video init failed: %s\n", SDL_GetError());
     return FALSE;
   }
-  w = surf->w;
-  h = surf->h;
-  SDL_ShowCursor(0);
-  SDL_WarpMouse(w/2,h/2);
+  glctx = SDL_GL_CreateContext(surf);
+  SDL_GL_GetDrawableSize(surf,&w,&h);
+  SDL_GL_SetSwapInterval(1);
+  SDL_SetRelativeMouseMode(SDL_TRUE);
 
   glClearDepth( 1.0 );
   glClearColor(0.6f,0.8f,0.9f,1);
@@ -243,4 +248,7 @@ int initGL()
   glDepthFunc(GL_LEQUAL);
   glBlendFunc(GL_SRC_ALPHA,GL_ONE_MINUS_SRC_ALPHA);
   return 1;
+}
+void swapBuffers() {
+  SDL_GL_SwapWindow(surf);
 }

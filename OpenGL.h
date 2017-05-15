@@ -37,4 +37,5 @@ extern int w,h;
 int LoadBMP(char *filename,Pict *&surf);
 int LoadTextures();
 int initGL();
+void swapBuffers();
 #endif

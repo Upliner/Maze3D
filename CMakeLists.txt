@@ -8,8 +8,8 @@ SET(CMAKE_VERBOSE_MAKEFILE ON)
 ADD_DEFINITIONS(-Wall -O2)
 
 #list all source files here
-ADD_EXECUTABLE(linmaze main.cpp Input.cpp Level3D.cpp OpenGL.cpp)
+ADD_EXECUTABLE(linmaze main.cpp Level3D.cpp OpenGL.cpp)
 
 #need to link to some other libraries ? just add them here
-TARGET_LINK_LIBRARIES(linmaze GL GLU SDL)
+TARGET_LINK_LIBRARIES(linmaze GL GLU SDL2)
  

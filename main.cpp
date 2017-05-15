@@ -4,7 +4,7 @@
 #include <GL/gl.h>
 #include <GL/glu.h>
 #include <math.h>
-#include <SDL/SDL.h>
+#include <SDL2/SDL.h>
 #include <GL/gl.h>
 #include <GL/glu.h>
 
@@ -374,24 +374,29 @@ if ((t2-t1)>0){fps = 1000/(t2-t1);}
       glEnable(GL_DEPTH_TEST);
     }
     glFlush();
-    SDL_GL_SwapBuffers( );
+    swapBuffers();
 }
+char keybuf[256];
+char ms[5];
 static void process_events( void )
 {
   SDL_Event event;
   while( SDL_PollEvent( &event ) )
     switch( event.type )
-    { case SDL_KEYDOWN:        keybuf[event.key.keysym.sym]=1;break;
-      case SDL_KEYUP:          keybuf[event.key.keysym.sym]=0;break;
+    { case SDL_KEYDOWN:        if (event.key.keysym.scancode < 256) keybuf[event.key.keysym.scancode]=1;break;
+      case SDL_KEYUP:          if (event.key.keysym.scancode < 256) keybuf[event.key.keysym.scancode]=0;break;
       case SDL_MOUSEBUTTONDOWN:ms[event.button.button]=1;break;
       case SDL_MOUSEBUTTONUP:  ms[event.button.button]=0;break;
       case SDL_QUIT:           SDL_Quit();exit(0);break;
+      case SDL_MOUSEMOTION: {
+        xr+=(float)event.motion.xrel/2;
+        yr+=(float)event.motion.yrel/2;
+      }
     }
-  int x1,y1;
-  SDL_GetMouseState(&x1,&y1);
-  SDL_WarpMouse(w/2,h/2);
-  x+=x1-(w/2);
-  y+=y1-(h/2);
+  while (xr<-180) xr += 360;
+  while (xr> 180) xr -= 360;
+  if (yr<-90) yr = -90;
+  if (yr> 90) yr = 90;
 }
 void Control()
 {
@@ -411,15 +416,15 @@ void Control()
         xri=sin(-xr*deg);yri=cos(-xr*deg);
         if ((zc<=FloorZ+0.1)){spd=0.05f;}else{if(jet){spd=0.005f;}else{spd=0.001f;}}
         if (health)
-        {   if (KeyPressed(SDLK_a)){xi+=(float)yri*spd;yi-=(float)xri*spd;}
-            if (KeyPressed(SDLK_d)){xi-=(float)yri*spd;yi+=(float)xri*spd;}
-            if (KeyPressed(SDLK_w)||MidMouse){xi+=(float)xri*spd;yi+=(float)yri*spd;}
-            if (KeyPressed(SDLK_s)){xi-=(float)xri*spd;yi-=(float)yri*spd;}
-            if (KeyPressed(SDLK_SPACE)||RightMouse) {if (zc <= FloorZ) zi = 0.075F;}
-            if (jet&&(KeyPressed(SDLK_q)||LLMouse)) {zi += 0.0055F;}
+        {   if (KeyPressed(SDL_SCANCODE_A)){xi+=(float)yri*spd;yi-=(float)xri*spd;}
+            if (KeyPressed(SDL_SCANCODE_D)){xi-=(float)yri*spd;yi+=(float)xri*spd;}
+            if (KeyPressed(SDL_SCANCODE_W)||MidMouse){xi+=(float)xri*spd;yi+=(float)yri*spd;}
+            if (KeyPressed(SDL_SCANCODE_S)){xi-=(float)xri*spd;yi-=(float)yri*spd;}
+            if (KeyPressed(SDL_SCANCODE_SPACE)||RightMouse) {if (zc <= FloorZ) zi = 0.075F;}
+            if (jet&&(KeyPressed(SDL_SCANCODE_Q)||LLMouse)) {zi += 0.0055F;}
             if (LeftMouse&&wlds_s == 11) wlds_s++;
         }
-        if (KeyPressed(SDLK_ESCAPE)) quit(0);
+        if (KeyPressed(SDL_SCANCODE_ESCAPE)) quit(0);
         if(MouseClick&&(!health)){LoadLevel(mapname);xc=2;yc=2;xi=0;yi=0;zi=0; health=100;FloorZ=0;jet=0;}
         xc += xi;yc += yi; zc += zi;
         ControlLevel();
@@ -431,10 +436,7 @@ void Control()
         if (zc<=(FloorZ+0.1f)){xi*=0.75F;yi*=0.75F;}else{xi*=0.98F;yi*=0.98F;}
         if (zc>CeilZ){zc=CeilZ;zi=0;}
       }
-      if (KeyPressed(SDLK_j)) if (health) health--;
-      while (x<-360) x += 720;while (x> 360) x -= 720;
-      while (y<-360) y = -360;while (y> 360) y =  360;
-      xr = (float)x/2;yr = (float)y/4;
+      if (KeyPressed(SDL_SCANCODE_J)) if (health) health--;
 }
 
 void quit(int code)
