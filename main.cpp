@@ -414,15 +414,15 @@ void Control()
     {
         process_events();
         xri=sin(-xr*deg);yri=cos(-xr*deg);
+        if (zc<=FloorZ+0.1){spd=0.05f;}else{if(jet){spd=0.004f;}else{spd=0.0005f;}}
         if (health)
         {
-            if (jet&&(KeyPressed(SDL_SCANCODE_Q)||LLMouse)) {zi += 0.0055F;}
-            if (zc<=FloorZ+0.1 && zi <= 0.001){spd=0.05f;}else{if(jet){spd=0.004f;}else{spd=0.0005f;}}
             if (KeyPressed(SDL_SCANCODE_A)){xi+=(float)yri*spd;yi-=(float)xri*spd;}
             if (KeyPressed(SDL_SCANCODE_D)){xi-=(float)yri*spd;yi+=(float)xri*spd;}
             if (KeyPressed(SDL_SCANCODE_W)||MidMouse){xi+=(float)xri*spd;yi+=(float)yri*spd;}
             if (KeyPressed(SDL_SCANCODE_S)){xi-=(float)xri*spd;yi-=(float)yri*spd;}
             if (KeyPressed(SDL_SCANCODE_SPACE)||RightMouse) {if (zc <= FloorZ) zi = 0.075F;}
+            if (jet&&(KeyPressed(SDL_SCANCODE_Q)||LLMouse)) {zi += 0.0055F;}
             if (LeftMouse&&wlds_s == 11) wlds_s++;
         }
         if (KeyPressed(SDL_SCANCODE_ESCAPE)) quit(0);
