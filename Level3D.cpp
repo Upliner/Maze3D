@@ -134,6 +134,27 @@ void DestroyWall(int x,int y)
   StartMov(x, y);
   Unoptim(x, y);
 }
+bool CheckWall(int xf, int yf, float x, float y)
+{
+  if (xf<0||yf<0||xf>79||yf>49) return false;
+  if (((x+xi*0.5)>xf-0.6)&&((x+xi*0.5)<xf+0.6)&&((y+yi*0.5)>yf-0.6)&&((y+yi*0.5)<yf+0.6))
+  { if (Level[yf][xf].type == 15&&(zc>=FloorZ)){CeilZ = min(CeilZ,0.8f);}
+    if (Level[yf][xf].type == 16&&(zc>=FloorZ)){CeilZ = min(CeilZ,2.8f);}
+    if (Level[yf][xf].type == 1||Level[yf][xf].type == 2||Level[yf][xf].type == 14||Level[yf][xf].type == 17||(Level[yf][xf].type == 7&&Moved[yf][xf]!=31))
+    { if ((Level[yf][xf].type == 2)&&(Moved[yf][xf] == 0)) DestroyWall(xf,yf);
+      if ((Level[yf][xf].type == 7)&&Level[yf][xf].dst&&(Moved[yf][xf] == 0)) StartMov(xf,yf);
+      if(x<=xf-0.599){xc=(float)((xf-0.6)*2)+2; xi = 0; return true;}
+      if(x>=xf+0.599){xc=(float)((xf+0.6)*2)+2; xi = 0; return true;}
+      if(y<=yf-0.599){yc=(float)((yf-0.6)*2)+2; yi = 0; return true;}
+      if(y>=yf+0.599){yc=(float)((yf+0.6)*2)+2; yi = 0; return true;}
+      printf("%f %f %i %i\n",x,y,xf,yf);
+      if ((Moved[yf][xf] == 0)||(Level[yf][xf].type != 2&&Level[yf][xf].type != 7)) {FloorZ = max(FloorZ,2);} else {if(FloorZ==0)FloorZ = (float)(2-(Moved[yf][xf]*0.0625));}
+      if (Level[yf][xf].type == 14){FloorZ = max(FloorZ,4);}
+    }
+  }
+  return false;
+}
+
 void ControlLevel()
 {
   int xf,yf;
@@ -141,9 +162,9 @@ void ControlLevel()
   if (wlds_s>0&&wlds_s<11)wlds_s++;if(wlds_s>11&&wlds_s<22)wlds_s++;
   if(wlds_s==22){if(wallds==0){wlds_s=0;}else{wlds_s=1;}}
   if(ta)ta=ta<8?0:ta-8;
-  if (xc<  1.2F) xc =   1.2F; if (yc<  1.2F) yc =   1.2F;
-  if (xc>160.8F) xc = 160.8F; if (yc>100.8F) yc = 100.8F;
-  double x = (xc-2)*0.5,y = (yc-2)*0.5;
+  if (xc<  1.2F) {xc =   1.2F;xi = 0;} if (yc<  1.2F) {yc =   1.2F; yi = 0;}
+  if (xc>160.8F) {xc = 160.8F;xi = 0;} if (yc>100.8F) {yc = 100.8F; yi = 0;}
+  double x = (xc-xi-2)*0.5,y = (yc-yi-2)*0.5;
   xf=(int)(x+0.5);yf=(int)(y+0.5);
   if (wallds&&wlds_s == 16&&zc<0.2)
   {
@@ -153,10 +174,14 @@ void ControlLevel()
   }
   if ((zc<1.7)&&(Level[yf][xf].type == 6))
   { tr=255;tg=255;tb=0;ta=64;
-    if ((int)(x-xi+0.5)<xf){for (;Level[yf][xf].type==6;xf++)StartMov(xf,yf);xc=(float)((xf+1)*2);zc=(Level[yf][xf].type==1)?2.0f:0.0f;return;}
-    if ((int)(x-xi+0.5)>xf){for (;Level[yf][xf].type==6;xf--)StartMov(xf,yf);xc=(float)((xf+1)*2);zc=(Level[yf][xf].type==1)?2.0f:0.0f;return;}
-    if ((int)(y-yi+0.5)<yf){for (;Level[yf][xf].type==6;yf++)StartMov(xf,yf);yc=(float)((yf+1)*2);zc=(Level[yf][xf].type==1)?2.0f:0.0f;return;}
-    if ((int)(y-yi+0.5)>yf){for (;Level[yf][xf].type==6;yf--)StartMov(xf,yf);yc=(float)((yf+1)*2);zc=(Level[yf][xf].type==1)?2.0f:0.0f;return;}
+    if (!Moved[yf][xf]) {
+      if ((int)(x-xi+0.5)<xf){for (;Level[yf][xf].type==6;xf++)StartMov(xf,yf);xc=(float)((xf+1)*2);zc=(Level[yf][xf].type==1)?2.0f:0.0f;return;}
+      if ((int)(x-xi+0.5)>xf){for (;Level[yf][xf].type==6;xf--)StartMov(xf,yf);xc=(float)((xf+1)*2);zc=(Level[yf][xf].type==1)?2.0f:0.0f;return;}
+      if ((int)(y-yi+0.5)<yf){for (;Level[yf][xf].type==6;yf++)StartMov(xf,yf);yc=(float)((yf+1)*2);zc=(Level[yf][xf].type==1)?2.0f:0.0f;return;}
+      if ((int)(y-yi+0.5)>yf){for (;Level[yf][xf].type==6;yf--)StartMov(xf,yf);yc=(float)((yf+1)*2);zc=(Level[yf][xf].type==1)?2.0f:0.0f;return;}
+    } else {
+      FloorZ = max(FloorZ, 0.25 * Moved[yf][xf]);
+    }
   }
   if ((zc<0.2)&&(Level[yf][xf].type == 5)){Level[yf][xf].type = 0; wallds++;if (wlds_s == 0) wlds_s = 1;}
   if ((zc<1.7)&&(Level[yf][xf].type == 100)) {fprintf(stderr,"you win"); quit(0);}
@@ -174,31 +199,20 @@ void ControlLevel()
   if (zc>=FloorZ) FloorZ = 0;
   CeilZ = 1000000000;
   if (zc<2)
-  { for (yf = (int)y-1;yf<=(int)y+1;yf++)
-      for (xf = (int)x-1;xf<=(int)x+1;xf++)
-      { if (xf<0||yf<0||xf>79||yf>49) continue;
-        if ((x>xf-0.6)&&(x<xf+0.6)&&(y>yf-0.6)&&(y<yf+0.6))
-        { if (Level[yf][xf].type == 15&&(zc>=FloorZ)){CeilZ = min(CeilZ,0.8f);}
-          if (Level[yf][xf].type == 16&&(zc>=FloorZ)){CeilZ = min(CeilZ,2.8f);}
-          if (Level[yf][xf].type == 1||Level[yf][xf].type == 2||Level[yf][xf].type == 14||Level[yf][xf].type == 17||(Level[yf][xf].type == 7&&Moved[yf][xf]!=31))
-          { if ((Level[yf][xf].type == 2)&&(Moved[yf][xf] == 0)) DestroyWall(xf,yf);
-            if ((Level[yf][xf].type == 7)&&Level[yf][xf].dst&&(Moved[yf][xf] == 0)) StartMov(xf,yf);
-            /*if (zc<FloorZ)
-            {
-              zc = zc;
-            }*/
-            if((x-xi)<(xf-0.6)&&(zc<FloorZ||(Level[yf][xf-1].type!=1&&Level[yf][xf-1].type!=2&&Level[yf][xf-1].type!=17&&Level[yf][xf-1].type!=14))){xc=(float)((xf-0.6)*2)+2;continue;}
-            if((x-xi)>(xf+0.6)&&(zc<FloorZ||(Level[yf][xf+1].type!=1&&Level[yf][xf+1].type!=2&&Level[yf][xf+1].type!=17&&Level[yf][xf+1].type!=14))){xc=(float)((xf+0.6)*2)+2;continue;}
-            if((y-yi)<(yf-0.6)){yc=(float)((yf-0.6)*2)+2;continue;}
-            if((y-yi)>(yf+0.6)){yc=(float)((yf+0.6)*2)+2;continue;}
-            if ((x<=xf-0.599)||(x>=xf+0.599)||(y<=yf-0.599)||(y>=yf+0.599)) continue;
-            if ((Moved[yf][xf] == 0)||(Level[yf][xf].type != 2&&Level[yf][xf].type != 7)) {FloorZ = max(FloorZ,2);} else {if(FloorZ==0)FloorZ = (float)(2-(Moved[yf][xf]*0.0625));}
-            if (Level[yf][xf].type == 14){FloorZ = max(FloorZ,4);}
-            continue;
-          }
-        }
-      }
+  {
     xf = (int)(x+0.5);yf = (int)(y+0.5);
+    bool coll = false;
+    CheckWall(xf, yf, x, y);
+    coll |= CheckWall(xf-1, yf, x, y);
+    coll |= CheckWall(xf+1, yf, x, y);
+    coll |= CheckWall(xf, yf-1, x, y);
+    coll |= CheckWall(xf, yf+1, x, y);
+    if (!coll) {
+      CheckWall(xf-1, yf-1, x, y);
+      CheckWall(xf+1, yf-1, x, y);
+      CheckWall(xf-1, yf+1, x, y);
+      CheckWall(xf+1, yf+1, x, y);
+    }
     if ((Level[yf][xf].type == 9)&&((x>xf-0.3)&&(x<xf+0.3)&&(y>yf-0.3)&&(y<yf+0.3))){FloorZ = (float)(0.2-(Moved[yf][xf]*0.02));}
     return;
   } else

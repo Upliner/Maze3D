@@ -377,7 +377,7 @@ if ((t2-t1)>0){fps = 1000/(t2-t1);}
     swapBuffers();
 }
 char keybuf[256];
-char ms[5];
+char ms[6];
 static void process_events( void )
 {
   SDL_Event event;
@@ -385,8 +385,8 @@ static void process_events( void )
     switch( event.type )
     { case SDL_KEYDOWN:        if (event.key.keysym.scancode < 256) keybuf[event.key.keysym.scancode]=1;break;
       case SDL_KEYUP:          if (event.key.keysym.scancode < 256) keybuf[event.key.keysym.scancode]=0;break;
-      case SDL_MOUSEBUTTONDOWN:ms[event.button.button]=1;break;
-      case SDL_MOUSEBUTTONUP:  ms[event.button.button]=0;break;
+      case SDL_MOUSEBUTTONDOWN:if (event.button.button < 6) ms[event.button.button]=1;break;
+      case SDL_MOUSEBUTTONUP:  if (event.button.button < 6) ms[event.button.button]=0;break;
       case SDL_QUIT:           SDL_Quit();exit(0);break;
       case SDL_MOUSEMOTION: {
         xr+=(float)event.motion.xrel/2;
@@ -414,14 +414,15 @@ void Control()
     {
         process_events();
         xri=sin(-xr*deg);yri=cos(-xr*deg);
-        if ((zc<=FloorZ+0.1)){spd=0.05f;}else{if(jet){spd=0.005f;}else{spd=0.001f;}}
         if (health)
-        {   if (KeyPressed(SDL_SCANCODE_A)){xi+=(float)yri*spd;yi-=(float)xri*spd;}
+        {
+            if (jet&&(KeyPressed(SDL_SCANCODE_Q)||LLMouse)) {zi += 0.0055F;}
+            if (zc<=FloorZ+0.1 && zi <= 0.001){spd=0.05f;}else{if(jet){spd=0.004f;}else{spd=0.0005f;}}
+            if (KeyPressed(SDL_SCANCODE_A)){xi+=(float)yri*spd;yi-=(float)xri*spd;}
             if (KeyPressed(SDL_SCANCODE_D)){xi-=(float)yri*spd;yi+=(float)xri*spd;}
             if (KeyPressed(SDL_SCANCODE_W)||MidMouse){xi+=(float)xri*spd;yi+=(float)yri*spd;}
             if (KeyPressed(SDL_SCANCODE_S)){xi-=(float)xri*spd;yi-=(float)yri*spd;}
             if (KeyPressed(SDL_SCANCODE_SPACE)||RightMouse) {if (zc <= FloorZ) zi = 0.075F;}
-            if (jet&&(KeyPressed(SDL_SCANCODE_Q)||LLMouse)) {zi += 0.0055F;}
             if (LeftMouse&&wlds_s == 11) wlds_s++;
         }
         if (KeyPressed(SDL_SCANCODE_ESCAPE)) quit(0);
@@ -433,7 +434,7 @@ void Control()
 //#endif
         if (zc>FloorZ) zi -= (float)0.005;
         if (zc<FloorZ){if(zi>=-0.2f){zc=FloorZ+zi;zi=0;}else{zi=-zi/2;health-=min(health,int((zi*15)*(zi*15)*(zi*15)));tr=255;tg=0;tb=0;ta=min(255,(int)((zi*30)*(zi*30)*(zi*30)));}}
-        if (zc<=(FloorZ+0.1f)){xi*=0.75F;yi*=0.75F;}else{xi*=0.98F;yi*=0.98F;}
+        if (zc<=(FloorZ+0.1f)){xi*=0.75F;yi*=0.75F;}else{xi*=0.995F;yi*=0.995F;zi*=0.995F;}
         if (zc>CeilZ){zc=CeilZ;zi=0;}
       }
       if (KeyPressed(SDL_SCANCODE_J)) if (health) health--;

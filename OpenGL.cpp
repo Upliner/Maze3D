@@ -216,7 +216,7 @@ int initGL()
   if((surf=SDL_CreateWindow("Maze3D",
                              SDL_WINDOWPOS_UNDEFINED,
                              SDL_WINDOWPOS_UNDEFINED,
-                             0, 0,
+                             1920, 1080,
                              SDL_WINDOW_FULLSCREEN_DESKTOP | SDL_WINDOW_OPENGL))==0)
   {
     fprintf(stderr, "Video init failed: %s\n", SDL_GetError());
