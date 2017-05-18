@@ -147,12 +147,24 @@ bool CheckWall(int xf, int yf, float x, float y)
       if(x>=xf+0.599){xc=(float)((xf+0.6)*2)+2; xi = 0; return true;}
       if(y<=yf-0.599){yc=(float)((yf-0.6)*2)+2; yi = 0; return true;}
       if(y>=yf+0.599){yc=(float)((yf+0.6)*2)+2; yi = 0; return true;}
-      printf("%f %f %i %i\n",x,y,xf,yf);
       if ((Moved[yf][xf] == 0)||(Level[yf][xf].type != 2&&Level[yf][xf].type != 7)) {FloorZ = max(FloorZ,2);} else {if(FloorZ==0)FloorZ = (float)(2-(Moved[yf][xf]*0.0625));}
       if (Level[yf][xf].type == 14){FloorZ = max(FloorZ,4);}
     }
   }
   return false;
+}
+bool CheckTallWall(int xf, int yf, float x, float y)
+{ if (xf<0||yf<0||xf>79||yf>49) return false;
+  if (((x+xi*0.5)>xf-0.6)&&((x+xi*0.5)<xf+0.6)&&((y+yi*0.5)>yf-0.6)&&((y+yi*0.5)<yf+0.6))
+  { if ( Level[yf][xf].type == 1 ||Level[yf][xf].type == 15 ||Level[yf][xf].type == 17){FloorZ = max(FloorZ,2);}
+    if ((Level[yf][xf].type == 16||Level[yf][xf].type == 17)&&(zc>=FloorZ)){CeilZ = min(CeilZ,2.8f);}
+    if (Level[yf][xf].type == 14)
+    { if(x<xf-0.599){xc=(float)((xf-0.6)*2)+2; xi = 0; return true;}
+      if(x>xf+0.599){xc=(float)((xf+0.6)*2)+2; xi = 0; return true;}
+      if(y<yf-0.599){yc=(float)((yf-0.6)*2)+2; yi = 0; return true;}
+      if(y>yf+0.599){yc=(float)((yf+0.6)*2)+2; yi = 0; return true;}
+    }
+  }
 }
 
 void ControlLevel()
@@ -214,27 +226,25 @@ void ControlLevel()
       CheckWall(xf+1, yf+1, x, y);
     }
     if ((Level[yf][xf].type == 9)&&((x>xf-0.3)&&(x<xf+0.3)&&(y>yf-0.3)&&(y<yf+0.3))){FloorZ = (float)(0.2-(Moved[yf][xf]*0.02));}
-    return;
   } else
   { if (zc<4)
-    { for (yf = (int)y-1;yf<=(int)y+1;yf++)
-        for (xf = (int)x-1;xf<=(int)x+1;xf++)
-        { if (xf<0||yf<0||xf>79||yf>49) continue;
-          if ((x>xf-0.6)&&(x<xf+0.6)&&(y>yf-0.6)&&(y<yf+0.6))
-          { if ( Level[yf][xf].type == 1 ||Level[yf][xf].type == 15 ||Level[yf][xf].type == 17){FloorZ = max(FloorZ,2);}
-            if ((Level[yf][xf].type == 16||Level[yf][xf].type == 17)&&(zc>=FloorZ)){CeilZ = min(CeilZ,2.8f);}
-            if (Level[yf][xf].type == 14)
-            { if((x-xi)<(xf-0.6)&&Level[yf][xf-1].type!=14){xc=(float)((xf-0.6)*2)+2;continue;}
-              if((x-xi)>(xf+0.6)&&Level[yf][xf+1].type!=14){xc=(float)((xf+0.6)*2)+2;continue;}
-              if((y-yi)<(yf-0.6)){yc=(float)((yf-0.6)*2)+2;continue;}
-              if((y-yi)>(yf+0.6)){yc=(float)((yf+0.6)*2)+2;continue;}
-              return;
-            }
-          }
-        }
-      return;
+    {
+      xf = (int)(x+0.5);yf = (int)(y+0.5);
+      bool coll = false;
+      CheckTallWall(xf, yf, x, y);
+      coll |= CheckTallWall(xf-1, yf, x, y);
+      coll |= CheckTallWall(xf+1, yf, x, y);
+      coll |= CheckTallWall(xf, yf-1, x, y);
+      coll |= CheckTallWall(xf, yf+1, x, y);
+      if (!coll) {
+        CheckTallWall(xf-1, yf-1, x, y);
+        CheckTallWall(xf+1, yf-1, x, y);
+        CheckTallWall(xf-1, yf+1, x, y);
+        CheckTallWall(xf+1, yf+1, x, y);
+      }
     } else
-    { for (yf = (int)y-1;yf<=(int)y+1;yf++)
+    { x += xi * 0.5; y += yi * 0.5;
+      for (yf = (int)y-1;yf<=(int)y+1;yf++)
         for (xf = (int)x-1;xf<=(int)x+1;xf++)
         { if (xf<0||yf<0||xf>79||yf>49) continue;
           if ((x>xf-0.6)&&(x<xf+0.6)&&(y>yf-0.6)&&(y<yf+0.6))
@@ -242,7 +252,6 @@ void ControlLevel()
             if (Level[yf][xf].type == 14||Level[yf][xf].type == 16||Level[yf][xf].type == 17){FloorZ = max(FloorZ,4);}
           }
         }
-        return;
     }
   }
 }
