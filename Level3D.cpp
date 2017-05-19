@@ -63,14 +63,47 @@ int TLevel(byte x,byte y)
     default:return 0;
   }
 }
+static float xcc, ycc;
+static float xrr, yrr;
+float ang(int x, int y) {
+    float xx = (float)x-xcc, yy = (float)y-ycc;
+    float x2 = yy * xrr - xx * yrr; float y2 = xx * xrr + yy * yrr;
+    return atan2(x2,y2);
+}
+void TraceRecurse(int x, int y, float a, float b) {
+    if (x < 0 || y < 0 || x > 79 || y > 49) return;
+    if (b <= a) return;
+    float a2, b2;
+    if (TLevel(x,y) == 0) {
+        a2 = ang(x,y+1); b2 = ang(x,y);
+        if (b2 > a && a2 < b) TraceRecurse(x-1, y, a2, b2);
+        a2 = ang(x,y); b2 = ang(x+1,y);
+        if (b2 > a && a2 < b) TraceRecurse(x, y-1, a2, b2);
+        a2 = ang(x+1,y); b2 = ang(x+1,y+1);
+        if (b2 > a && a2 < b) TraceRecurse(x+1, y, a2, b2);
+        a2 = ang(x+1,y+1); b2 = ang(x,y+1);
+        if (b2 > a && a2 < b) TraceRecurse(x, y+1, a2, b2);
+    }
+    DrawLevelTile(x,y);
+}
 void RenderLevel()
-{ glCallList(FLOOR);
-  glCallList(EXTWALL);
-  int x = (int)((xc-1)*0.5),y = (int)((yc-1)*0.5);
-  int xm,ym;
-  for (ym=max(0,(byte)y-41);ym<=min(49,(byte)y+41);ym++)
-    for (xm=max(0,(byte)x-41);xm<=min(79,(byte)x+41);xm++)
-      DrawLevelTile(xm,ym);
+{
+    glCallList(FLOOR);
+    glCallList(EXTWALL);
+
+    int x = (int)((xc-1)*0.5),y = (int)((yc-1)*0.5);
+    if (zc < 2) {
+        xrr = -sin(xr*deg);
+        yrr = cos(xr*deg);
+        xcc = (xc-1)*0.5;
+        ycc = (yc-1)*0.5;
+        TraceRecurse(x,y,-PI/2,PI/2);
+    } else
+    {
+        for (int ym=max(0,(byte)y-41);ym<=min(49,(byte)y+41);ym++)
+            for (int xm=max(0,(byte)x-41);xm<=min(79,(byte)x+41);xm++)
+                DrawLevelTile(xm,ym);
+    }
 }
 struct movstruct
 {
@@ -165,6 +198,7 @@ bool CheckTallWall(int xf, int yf, float x, float y)
       if(y>yf+0.599){yc=(float)((yf+0.6)*2)+2; yi = 0; return true;}
     }
   }
+  return false;
 }
 
 void ControlLevel()
