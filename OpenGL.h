@@ -5,11 +5,16 @@
 #include <GL/glu.h>
 #include "defines.h"
 
-struct Pict
-{
-  long w,h;
-  byte *data;
+struct buffer {
+  byte *buf;
+  buffer(int size) {
+    buf = new byte[size];
+  }
+  ~buffer() {
+    delete []buf;
+  }
 };
+
 typedef struct {
   WORD    bfType;
   DWORD   bfSize;
@@ -34,8 +39,7 @@ typedef struct {
 extern unsigned int wall,ground,jetpack,key,gr,hudh,font;
 extern int w,h;
 
-int LoadBMP(char *filename,Pict *&surf);
-int LoadTextures();
-int initGL();
+void LoadTextures();
+void initGL();
 void swapBuffers();
 #endif

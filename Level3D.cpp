@@ -10,6 +10,7 @@ typedef byte BLine[80];
 TLine Level[50];
 BLine Moved[50];
 BLine Optim[50];
+BLine Rend[50];
 float xc=2,yc=2,zc=0, xi, yi, zi, xr,yr;
 double xri,yri;
 float FloorZ = 0,CeilZ = 1000000000;
@@ -73,18 +74,17 @@ float ang(int x, int y) {
 void TraceRecurse(int x, int y, float a, float b) {
     if (x < 0 || y < 0 || x > 79 || y > 49) return;
     if (b <= a) return;
-    float a2, b2;
     if (TLevel(x,y) == 0) {
-        a2 = ang(x,y+1); b2 = ang(x,y);
-        if (b2 > a && a2 < b) TraceRecurse(x-1, y, a2, b2);
-        a2 = ang(x,y); b2 = ang(x+1,y);
-        if (b2 > a && a2 < b) TraceRecurse(x, y-1, a2, b2);
-        a2 = ang(x+1,y); b2 = ang(x+1,y+1);
-        if (b2 > a && a2 < b) TraceRecurse(x+1, y, a2, b2);
-        a2 = ang(x+1,y+1); b2 = ang(x,y+1);
-        if (b2 > a && a2 < b) TraceRecurse(x, y+1, a2, b2);
+        const float a1 = ang(x,y+1), a2 = ang(x,y), a3 = ang(x+1,y), a4 = ang(x+1,y+1);
+        if (a2 > a && a1 < b) TraceRecurse(x-1, y, max(a1, a), min(a2, b));
+        if (a3 > a && a2 < b) TraceRecurse(x, y-1, max(a2, a), min(a3, b));
+        if (a4 > a && a3 < b) TraceRecurse(x+1, y, max(a3, a), min(a4, b));
+        if (a1 > a && a4 < b) TraceRecurse(x, y+1, max(a4, a), min(a1, b));
     }
-    DrawLevelTile(x,y);
+    if (!Rend[y][x]) {
+        DrawLevelTile(x,y);
+        Rend[y][x] = 1;
+    }
 }
 void RenderLevel()
 {
@@ -92,12 +92,20 @@ void RenderLevel()
     glCallList(EXTWALL);
 
     int x = (int)((xc-1)*0.5),y = (int)((yc-1)*0.5);
-    if (zc < 2) {
+    if (zc < 1) {
+        memset(&Rend, 0, sizeof(Rend));
         xrr = -sin(xr*deg);
         yrr = cos(xr*deg);
         xcc = (xc-1)*0.5;
         ycc = (yc-1)*0.5;
-        TraceRecurse(x,y,-PI/2,PI/2);
+        TraceRecurse(x-1,y,-PI/2,PI/2);
+        TraceRecurse(x+1,y,-PI/2,PI/2);
+        TraceRecurse(x,y+1,-PI/2,PI/2);
+        TraceRecurse(x,y-1,-PI/2,PI/2);
+        if (!Rend[y][x]) {
+            DrawLevelTile(x,y);
+            Rend[y][x] = 1;
+        }
     } else
     {
         for (int ym=max(0,(byte)y-41);ym<=min(49,(byte)y+41);ym++)
