@@ -80,30 +80,61 @@ void createObjects()
   glNewList(EXTWALL, GL_COMPILE);
     glEnable(GL_TEXTURE_2D);
     glBindTexture(GL_TEXTURE_2D,wall);
-    glBegin(GL_QUADS);
-      glTexCoord2s( 0,0); glVertex3i(   1,3, 1); glTexCoord2s( 0,1); glVertex3i(   1,3,-1);
-      glTexCoord2s(82,1); glVertex3i(-163,3,-1); glTexCoord2s(82,0); glVertex3i(-163,3, 1);
-
-      glTexCoord2s( 0,2); glVertex3i(  -1, 3,-1); glTexCoord2s( 0,0); glVertex3i(  -1,-1,-1);
-      glTexCoord2s(80,0); glVertex3i(-161,-1,-1); glTexCoord2s(80,2); glVertex3i(-161 ,3,-1);
-
-      glTexCoord2s( 0, 0); glVertex3i(   1,3,-101); glTexCoord2s( 0, 1); glVertex3i(   1,3,-103);
-      glTexCoord2s(82, 1); glVertex3i(-163,3,-103); glTexCoord2s(82, 0); glVertex3i(-163,3,-101);
-
-      glTexCoord2s(80, 2); glVertex3i(  -1, 3,-101); glTexCoord2s( 0, 2); glVertex3i(-161 ,3,-101);
-      glTexCoord2s( 0, 0); glVertex3i(-161,-1,-101); glTexCoord2s(80, 0); glVertex3i(  -1,-1,-101);
-
-      glTexCoord2s(0, 0); glVertex3i( 1,3,  -1); glTexCoord2s(0,50); glVertex3i( 1,3,-101);
-      glTexCoord2s(1,50); glVertex3i(-1,3,-101); glTexCoord2s(1, 0); glVertex3i(-1,3,  -1);
-
-      glTexCoord2s(50,2); glVertex3i(-1, 3,  -1); glTexCoord2s( 0,2); glVertex3i(-1, 3,-101);
-      glTexCoord2s( 0,0); glVertex3i(-1,-1,-101); glTexCoord2s(50,0); glVertex3i(-1,-1,  -1);
-
-      glTexCoord2s(0, 0); glVertex3i(-161,3,  -1); glTexCoord2s(0,50); glVertex3i(-161,3,-101);
-      glTexCoord2s(1,50); glVertex3i(-163,3,-101); glTexCoord2s(1, 0); glVertex3i(-163,3,  -1);
-
-      glTexCoord2s( 0,2); glVertex3i(-161, 3,  -1); glTexCoord2s( 0,0); glVertex3i(-161,-1,  -1);
-      glTexCoord2s(50,0); glVertex3i(-161,-1,-101); glTexCoord2s(50,2); glVertex3i(-161, 3,-101);
+    glBegin(GL_TRIANGLE_STRIP);
+      glTexCoord2s(0,0); glVertex3i(1,3, 1);
+      glTexCoord2s(0,1); glVertex3i(1,3,-1);
+      for (int i = 0; i <= 10; i++) {
+          glTexCoord2s(1+i*8,0); glVertex3i(-1-i*16,3, 1);
+          glTexCoord2s(1+i*8,1); glVertex3i(-1-i*16,3,-1);
+      }
+      glTexCoord2s(82,0); glVertex3i(-163,3, 1);
+      glTexCoord2s(82,1); glVertex3i(-163,3,-1);
+    glEnd();
+    glBegin(GL_TRIANGLE_STRIP);
+      for (int i = 0; i <= 10; i++) {
+          glTexCoord2s(i*8,0); glVertex3i(-1-i*16, 3,-1);
+          glTexCoord2s(i*8,2); glVertex3i(-1-i*16,-1,-1);
+      }
+    glEnd();
+    glBegin(GL_TRIANGLE_STRIP);
+      glTexCoord2s( 0, 0); glVertex3i(   1,3,-101);
+      glTexCoord2s( 0, 1); glVertex3i(   1,3,-103);
+      for (int i = 0; i <= 10; i++) {
+        glTexCoord2s(1+i*8, 0); glVertex3i(-1-i*16,3,-101);
+        glTexCoord2s(1+i*8, 1); glVertex3i(-1-i*16,3,-103);
+      }
+      glTexCoord2s(82, 0); glVertex3i(-163,3,-101);
+      glTexCoord2s(82, 1); glVertex3i(-163,3,-103);
+    glEnd();
+    glBegin(GL_TRIANGLE_STRIP);
+      for (int i = 0; i <= 10; i++) {
+          glTexCoord2s(i*8,0); glVertex3i(-1-i*16,-1,-101);
+          glTexCoord2s(i*8,2); glVertex3i(-1-i*16, 3,-101);
+      }
+    glEnd();
+    glBegin(GL_TRIANGLE_STRIP);
+      for (int i = 0; i <= 10; i++) {
+        glTexCoord2s(1, i*5); glVertex3i(-1,3,-1-i*10);
+        glTexCoord2s(0, i*5); glVertex3i( 1,3,-1-i*10);
+      }
+    glEnd();
+    glBegin(GL_TRIANGLE_STRIP);
+      for (int i = 0; i <= 10; i++) {
+        glTexCoord2s(50-i*5,0); glVertex3i(-1,-1,-1-i*10);
+        glTexCoord2s(50-i*5,2); glVertex3i(-1, 3,-1-i*10);
+      }
+    glEnd();
+    glBegin(GL_TRIANGLE_STRIP);
+      for (int i = 0; i <= 10; i++) {
+        glTexCoord2s(1,i*5); glVertex3i(-163,3,-1-i*10);
+        glTexCoord2s(0,i*5); glVertex3i(-161,3,-1-i*10);
+      }
+    glEnd();
+    glBegin(GL_TRIANGLE_STRIP);
+      for (int i = 0; i <= 10; i++) {
+        glTexCoord2s(i*5,2); glVertex3i(-161, 3,-1-i*10);
+        glTexCoord2s(i*5,0); glVertex3i(-161,-1,-1-i*10);
+      }
     glEnd();
   glEndList();
 
