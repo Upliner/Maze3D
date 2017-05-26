@@ -389,8 +389,8 @@ static void process_events( void )
       case SDL_MOUSEBUTTONUP:  if (event.button.button < 6) ms[event.button.button]=0;break;
       case SDL_QUIT:           SDL_Quit();exit(0);break;
       case SDL_MOUSEMOTION: {
-        xr+=(float)event.motion.xrel/2;
-        yr+=(float)event.motion.yrel/2;
+        xr+=(float)event.motion.xrel/4;
+        yr+=(float)event.motion.yrel/8;
       }
     }
   while (xr<-180) xr += 360;
