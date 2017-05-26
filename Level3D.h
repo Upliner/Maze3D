@@ -5,8 +5,8 @@ struct tile
 {
   byte type;
   byte vx,vy;
-  bool dst;
-};
+  byte dst;
+} __attribute((packed));
 
 extern float xc, yc, zc, xi, yi, zi, xr,yr;
 extern double xri,yri;
@@ -19,6 +19,6 @@ extern byte tr,tg,tb,ta;
 extern word wallds,wlds_s;
 void RenderLevel();
 void ControlLevel();
-void LoadLevel(char *filename);
+void LoadLevel(char const *filename);
 
 #endif

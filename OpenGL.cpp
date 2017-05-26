@@ -1,25 +1,12 @@
 #include "OpenGL.h"
+#include "Common.h"
 #include <stdio.h>
 #include <SDL2/SDL.h>
 #include <stdexcept>
 #include <sstream>
 
 unsigned int wall,ground,jetpack,key,gr,hudh,font;
-struct MyFile {
-  char const *filename;
-  FILE *f;
-  MyFile(char const *filename) : filename(filename) {
-    if (!(f = fopen(filename,"rb")))
-      throw std::runtime_error(std::string("Can't open file") + std::string(filename));
-  }
-  void read(void *buf, int size, size_t cnt) {
-    if (fread(buf, size, cnt, f) != cnt)
-      throw std::runtime_error(std::string("Error reading file ") + std::string(filename));
-  }
-  ~MyFile() {
-    fclose(f);
-  }
-};
+
 #define MgFilter GL_LINEAR
 #define MpFilter GL_LINEAR_MIPMAP_LINEAR
 #define MnFilter GL_LINEAR
@@ -29,32 +16,37 @@ void TexParams(bool mipmap) {
     glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER,MgFilter);
     glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER,mipmap ? MpFilter : MnFilter);
 }
-void LoadBMP(char const *filename)
-{
+void LoadBMPHeader(MyFile &f, int &w, int &h, int &bb) {
   BITMAPFILEHEADER fle;
   BITMAPINFOHEADER inf;
-  MyFile f(filename);
-  f.read(&fle,1,sizeof(fle));
+  f.read(&fle,sizeof(fle));
   if (fle.bfType != 19778) {
     std::stringstream ss;
-    ss << "LoadBMP_A: bfType "<< fle.bfType << " is incorrect in " << filename;
+    ss << "LoadBMP: bfType "<< fle.bfType << " is incorrect in " << f.filename;
     throw std::runtime_error(ss.str());
   }
   fseek(f.f,0x0e,SEEK_SET);
-  f.read(&inf,1,sizeof(inf));
+  f.read(&inf,sizeof(inf));
   fseek(f.f,fle.bfOffBits,SEEK_SET);
-  int w = inf.biWidth;
-  int h = inf.biHeight;
+  w = inf.biWidth;
+  h = inf.biHeight;
   int bp = inf.biBitCount>>3;
-  int bb = w*bp;
+  bb = (((w*bp)+3) & ~3);
   if (inf.biBitCount != 24) {
     std::stringstream ss;
-    ss << "LoadBMP_A: BitDepth " << inf.biBitCount << " is incorrect in " << filename;
+    ss << "LoadBMP: BitDepth " << inf.biBitCount << " is incorrect in " << f.filename;
     throw std::runtime_error(ss.str());
   }
-  buffer vbuf(bb*h);
+}
+void LoadBMP(char const *filename)
+{
+  MyFile f(filename);
+  int w, h, bb;
+  LoadBMPHeader(f,w,h,bb);
+  int siz = bb * h;
+  buffer vbuf(siz);
   byte *buf = vbuf.buf;
-  f.read(buf,h,bb);
+  f.read(buf,siz);
   buffer pbuf(w*h*3);
   byte *Surf = pbuf.buf;
   int x;
@@ -71,32 +63,15 @@ void LoadBMP(char const *filename)
   gluBuild2DMipmaps(GL_TEXTURE_2D,3,w,h,GL_RGB,GL_UNSIGNED_BYTE,pbuf.buf);
   TexParams(true);
 }
-void LoadBMP_A(char const *filename,byte r,byte g, byte b, bool mipmap)
+void LoadBMP_A(char const *filename,byte r,byte g,byte b, bool mipmap)
 {
-  BITMAPFILEHEADER fle;
-  BITMAPINFOHEADER inf;
   MyFile f(filename);
-  f.read(&fle,1,sizeof(fle));
-  if (fle.bfType != 19778) {
-    std::stringstream ss;
-    ss << "LoadBMP_A: bfType "<< fle.bfType << " is incorrect in " << filename;
-    throw std::runtime_error(ss.str());
-  }
-  fseek(f.f,0x0e,SEEK_SET);
-  f.read(&inf,1,sizeof(inf));
-  fseek(f.f,fle.bfOffBits,SEEK_SET);
-  int w = inf.biWidth;
-  int h = inf.biHeight;
-  int bp = inf.biBitCount>>3;
-  int bb = (((w*bp)+3) & ~3);
-  if (inf.biBitCount != 24) {
-    std::stringstream ss;
-    ss << "LoadBMP_A: BitDepth " << inf.biBitCount << " is incorrect in " << filename;
-    throw std::runtime_error(ss.str());
-  }
-  buffer vbuf(bb*h);
+  int w, h, bb;
+  LoadBMPHeader(f,w,h,bb);
+  int siz = bb * h;
+  buffer vbuf(siz);
   byte *buf = vbuf.buf;
-  f.read(buf,h,bb);
+  f.read(buf, siz);
   buffer pbuf(w*h*4);
   byte *Surf = pbuf.buf;
   int x;

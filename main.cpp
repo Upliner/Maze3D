@@ -21,7 +21,7 @@
 
 #define Interval 30
 
-char *mapname=(char*)"1.map";
+char const *mapname = "1.map";
 dword t1,t2,ti;
 int w,h;
 void createObjects()
@@ -481,24 +481,25 @@ void quit(int code)
   exit(code);
 }
 
-int main( int argc, char* argv[] )
+int main(int argc, char* argv[])
 {
+    if (argc == 2) {
+        mapname = argv[1];
+    }
     try {
         initGL();
         LoadTextures();
+        createObjects();
+        LoadLevel(mapname);
+        t2=SDL_GetTicks();
+        while (1) {
+            Control();
+            drawScene();
+        }
     } catch (std::exception &e) {
         std::cerr << e.what();
-        quit(1);
     } catch (...) {
         std::cerr << "Unknown error";
-        quit(1);
     }
-    createObjects();
-    LoadLevel(mapname);
-    t2=SDL_GetTicks();
-    while( 1 ) {
-        Control();
-        drawScene();
-    }
-    return 0;
+    quit(1);
 }

@@ -312,16 +312,15 @@ void CreateOptim()
     }
 }
 
-void LoadLevel(char *filename)
+void LoadLevel(char const *filename)
 {
-  FILE *f = fopen(filename,"rb");
-  word m;
-  fread(&Level,sizeof(tile),4000,f);
-  fread(&m,2,1,f);m--;
-  Level[m/80][m%80].type=100;
-  ZeroMemory(Moved,4000);
-  movs.clear();
-  CreateOptim();
-  wallds=0;ta=0;
-  fclose(f);
+    MyFile f(filename);
+    word m;
+    f.read(&Level,sizeof(tile)*4000);
+    f.read(&m,2);m--;
+    Level[m/80][m%80].type=100;
+    ZeroMemory(Moved,4000);
+    movs.clear();
+    CreateOptim();
+    wallds=0;ta=0;
 }
