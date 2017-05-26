@@ -57,8 +57,7 @@ void DrawLevelTile(int x,int y)
 int TLevel(byte x,byte y)
 { switch (Level[y][x].type)
   { case 14: return 2;
-    case 16: return 2;
-    case 17: return 2;
+    case 17: return 1;
     case  1: return 1;
     case  2: return Moved[y][x]==0?1:0;
     default:return 0;
@@ -145,7 +144,6 @@ void ProcessMoving()
           if (Moved[yf][xf] == 8)
           { Moved[yf][xf] = 0;
             Level[yf][xf].type = 1;
-            Optim[yf][xf] = 0;
             i=movs.erase(i);
             continue;
           }
@@ -309,7 +307,7 @@ void CreateOptim()
     for(x=0;x<80;x++)
     {
       i = TALevel(x,y);
-      if (TALevel(x-1,y)>=i&&TALevel(x+1,y)>=i&&TALevel(x,y-1)>=i&&TALevel(x,y+1)>=i)
+      if (i>0&&TALevel(x-1,y)>=i&&TALevel(x+1,y)>=i&&TALevel(x,y-1)>=i&&TALevel(x,y+1)>=i)
         Optim[y][x]=1; else Optim[y][x]=0;
     }
 }
