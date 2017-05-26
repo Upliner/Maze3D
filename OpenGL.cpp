@@ -1,39 +1,62 @@
 #include "OpenGL.h"
 #include <stdio.h>
 #include <SDL2/SDL.h>
-#include <vector>
+#include <stdexcept>
+#include <sstream>
 
-Pict *wl;
 unsigned int wall,ground,jetpack,key,gr,hudh,font;
-
-int LoadBMP(char const *filename,Pict *&surf)
-{
-  surf = new Pict;
+struct MyFile {
+  char const *filename;
   FILE *f;
+  MyFile(char const *filename) : filename(filename) {
+    if (!(f = fopen(filename,"rb")))
+      throw std::runtime_error(std::string("Can't open file") + std::string(filename));
+  }
+  void read(void *buf, int size, size_t cnt) {
+    if (fread(buf, size, cnt, f) != cnt)
+      throw std::runtime_error(std::string("Error reading file ") + std::string(filename));
+  }
+  ~MyFile() {
+    fclose(f);
+  }
+};
+#define MgFilter GL_LINEAR
+#define MpFilter GL_LINEAR_MIPMAP_LINEAR
+#define MnFilter GL_LINEAR
+void TexParams(bool mipmap) {
+    glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_WRAP_S,GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_WRAP_T,GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER,MgFilter);
+    glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER,mipmap ? MpFilter : MnFilter);
+}
+void LoadBMP(char const *filename)
+{
   BITMAPFILEHEADER fle;
   BITMAPINFOHEADER inf;
-  if (!(f = fopen(filename,"rb"))) {fprintf(stderr,"LoadBMP: Can't open %s\n",filename);return 0;}
-  fread(&fle,1,sizeof(fle),f);
-  if (fle.bfType != 19778) {fprintf(stderr,"LoadBMP: bfType %i is incorrect in %s\n",fle.bfType,filename);return 0;}
-  fseek(f,0x0e,SEEK_SET);
-  fread(&inf,1,sizeof(inf),f);
-  fseek(f,fle.bfOffBits,SEEK_SET);
+  MyFile f(filename);
+  f.read(&fle,1,sizeof(fle));
+  if (fle.bfType != 19778) {
+    std::stringstream ss;
+    ss << "LoadBMP_A: bfType "<< fle.bfType << " is incorrect in " << filename;
+    throw std::runtime_error(ss.str());
+  }
+  fseek(f.f,0x0e,SEEK_SET);
+  f.read(&inf,1,sizeof(inf));
+  fseek(f.f,fle.bfOffBits,SEEK_SET);
   int w = inf.biWidth;
   int h = inf.biHeight;
   int bp = inf.biBitCount>>3;
   int bb = w*bp;
-  if (inf.biBitCount != 24){fprintf(stderr,"LoadBMP: BitDepth %i is incorrect in %s\n",inf.biBitCount,filename);
-   return 0;}
-  std::vector<byte> vbuf(bb*h);
-  byte *buf = &vbuf[0];
-  int ri=fread(buf,h,bb,f);
-  if (ri!=bb)
-  { fprintf(stderr,"warning: only %i lines was read from %s\n",ri,filename);
+  if (inf.biBitCount != 24) {
+    std::stringstream ss;
+    ss << "LoadBMP_A: BitDepth " << inf.biBitCount << " is incorrect in " << filename;
+    throw std::runtime_error(ss.str());
   }
-  surf->w = w;
-  surf->h = h;
-  surf->data = new byte[w*h*3];
-  byte *Surf = surf->data;
+  buffer vbuf(bb*h);
+  byte *buf = vbuf.buf;
+  f.read(buf,h,bb);
+  buffer pbuf(w*h*3);
+  byte *Surf = pbuf.buf;
   int x;
   int l;
   int b;
@@ -41,39 +64,44 @@ int LoadBMP(char const *filename,Pict *&surf)
   {
     l = 0;
     b = 0;
-    for (x = 0;x<w;x++){Surf[l] = buf[b+2]; Surf[l+1] = buf[b+1]; Surf[l+2] = buf[b]; l+= 3; b+=3;}
+    for (x = 0;x<w;x++) {Surf[l] = buf[b+2]; Surf[l+1] = buf[b+1]; Surf[l+2] = buf[b]; l+= 3; b+=3;}
     Surf+= w*3;
     buf += bb;
   }
-  return 1;
+  gluBuild2DMipmaps(GL_TEXTURE_2D,3,w,h,GL_RGB,GL_UNSIGNED_BYTE,pbuf.buf);
+  TexParams(true);
 }
-int LoadBMP_A(char const *filename,Pict *&surf,byte r,byte g, byte b)
+void LoadBMP_A(char const *filename,byte r,byte g, byte b, bool mipmap)
 {
-  surf = new Pict;
-  FILE *f;
   BITMAPFILEHEADER fle;
   BITMAPINFOHEADER inf;
-  if (!(f = fopen(filename,"rb"))) {fprintf(stderr,"LoadBMP_A: Can't open %s\n",filename);return 0;}
-  fread(&fle,1,sizeof(fle),f);
-  if (fle.bfType != 19778) return 0;
-  fseek(f,0x0e,SEEK_SET);
-  fread(&inf,1,sizeof(inf),f);
-  fseek(f,0x36/*fle.bfOffBits*/,SEEK_SET);
+  MyFile f(filename);
+  f.read(&fle,1,sizeof(fle));
+  if (fle.bfType != 19778) {
+    std::stringstream ss;
+    ss << "LoadBMP_A: bfType "<< fle.bfType << " is incorrect in " << filename;
+    throw std::runtime_error(ss.str());
+  }
+  fseek(f.f,0x0e,SEEK_SET);
+  f.read(&inf,1,sizeof(inf));
+  fseek(f.f,fle.bfOffBits,SEEK_SET);
   int w = inf.biWidth;
   int h = inf.biHeight;
   int bp = inf.biBitCount>>3;
   int bb = (((w*bp)+3) & ~3);
-  if (inf.biBitCount != 24) return 0;
-  byte *buf = new byte[bb*h];
-  fread(buf,h,bb,f);
-  surf->w = w;
-  surf->h = h;
-  surf->data = new byte[w*h*4];
-  byte *Surf = surf->data;
+  if (inf.biBitCount != 24) {
+    std::stringstream ss;
+    ss << "LoadBMP_A: BitDepth " << inf.biBitCount << " is incorrect in " << filename;
+    throw std::runtime_error(ss.str());
+  }
+  buffer vbuf(bb*h);
+  byte *buf = vbuf.buf;
+  f.read(buf,h,bb);
+  buffer pbuf(w*h*4);
+  byte *Surf = pbuf.buf;
   int x;
   int l;
   int p;
-//  buf += bb*(h-1);
   for (int i = 0;i<(h);i++)
   {
     l = 0;
@@ -82,13 +110,13 @@ int LoadBMP_A(char const *filename,Pict *&surf,byte r,byte g, byte b)
     Surf+= w*4;
     buf += bb;
   }
-//delete buf;
-  return 1;
+  if (mipmap)
+    gluBuild2DMipmaps(GL_TEXTURE_2D,4,w,h,GL_RGBA,GL_UNSIGNED_BYTE,pbuf.buf);
+  else
+    glTexImage2D(GL_TEXTURE_2D,0,4,w,h,0,GL_RGBA,GL_UNSIGNED_BYTE,pbuf.buf);
+  TexParams(mipmap);
 }
-#define MgFilter GL_LINEAR
-#define MpFilter GL_LINEAR_MIPMAP_LINEAR
-#define MnFilter GL_LINEAR
-int LoadTextures()
+void LoadTextures()
 {
     glGenTextures(1,&wall);
     glGenTextures(1,&ground);
@@ -96,116 +124,30 @@ int LoadTextures()
     glGenTextures(1,&key);
     glGenTextures(1,&hudh);
     glGenTextures(1,&font);
+
     glBindTexture(GL_TEXTURE_2D,wall);
-
-    if (!LoadBMP("wl.bmp",wl)){fprintf(stderr,"ERROR!!!\n");return 0;}
- //   glPixelStorei (GL_UNPACK_ALIGNMENT, 1);
-
-    gluBuild2DMipmaps(GL_TEXTURE_2D,3,wl->w,wl->h,GL_RGB,GL_UNSIGNED_BYTE,wl->data);
-
-    glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_WRAP_S,GL_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_WRAP_T,GL_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER,MgFilter);
-    glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER,MpFilter);
-
-    delete[] wl->data;
-    delete wl;
-    LoadBMP("grnd.bmp",wl);
-
+    LoadBMP("wl.bmp");
     glBindTexture(GL_TEXTURE_2D,ground);
-
-    gluBuild2DMipmaps(GL_TEXTURE_2D,3,wl->w,wl->h,GL_RGB,GL_UNSIGNED_BYTE,wl->data);
-
-    glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_WRAP_S,GL_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_WRAP_T,GL_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER,MgFilter);
-    glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER,MpFilter);
-
-    delete wl->data;
-    delete wl;
-
-    LoadBMP("jetp.bmp",wl);
-
+    LoadBMP("grnd.bmp");
     glBindTexture(GL_TEXTURE_2D,jetpack);
-
-    gluBuild2DMipmaps(GL_TEXTURE_2D,3,wl->w,wl->h,GL_RGB,GL_UNSIGNED_BYTE,wl->data);
-
-    glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_WRAP_S,GL_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_WRAP_T,GL_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER,MgFilter);
-    glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER,MpFilter);
-
-    delete wl->data;
-    delete wl;
-
-    LoadBMP_A("key.bmp",wl,255,255,0);
-
+    LoadBMP("jetp.bmp");
     glBindTexture(GL_TEXTURE_2D,key);
-
-    glTexImage2D (GL_TEXTURE_2D,0,4,wl->w,wl->h,0,GL_RGBA,GL_UNSIGNED_BYTE,wl->data);
-
-    glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_WRAP_S,GL_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_WRAP_T,GL_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER,MgFilter);
-    glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER,MnFilter);
-
-    delete wl->data;
-    delete wl;
-
-    LoadBMP_A("hud-h.bmp",wl,255,0,0);
-
+    LoadBMP_A("key.bmp",255,255,0, true);
     glBindTexture(GL_TEXTURE_2D,hudh);
-
-    glTexImage2D (GL_TEXTURE_2D,0,4,wl->w,wl->h,0,GL_RGBA,GL_UNSIGNED_BYTE,wl->data);
-
-    glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_WRAP_S,GL_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_WRAP_T,GL_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER,MgFilter);
-    glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER,MnFilter);
-
-    delete wl->data;
-    delete wl;
-
-    LoadBMP_A("smallfont.bmp",wl,255,255,255);
-
+    LoadBMP_A("hud-h.bmp",255,0,0, false);
     glBindTexture(GL_TEXTURE_2D,font);
-
-    glTexImage2D (GL_TEXTURE_2D,0,4,wl->w,wl->h,0,GL_RGBA,GL_UNSIGNED_BYTE,wl->data);
-
-    glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_WRAP_S,GL_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_WRAP_T,GL_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER,MgFilter);
-    glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER,MnFilter);
-
-    delete wl->data;
-    delete wl;
-
-    LoadBMP("gr.bmp",wl);
-
+    LoadBMP_A("smallfont.bmp",255,255,255, false);
     glBindTexture(GL_TEXTURE_2D,gr);
-
-    gluBuild2DMipmaps(GL_TEXTURE_2D,4,wl->w,wl->h,GL_RGB,GL_UNSIGNED_BYTE,wl->data);
-
-    glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_WRAP_S,GL_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_WRAP_T,GL_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER,MgFilter);
-    glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER,MpFilter);
-
-    delete wl->data;
-    delete wl;
+    LoadBMP("gr.bmp");
 
     glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
-    return 1;
 }
 SDL_Window *surf;
 SDL_GLContext glctx;
-int initGL()
+void initGL()
 {
   if(SDL_Init(SDL_INIT_VIDEO)<0)
-  {
-    fprintf(stderr, "SDL initialization failed: %s\n",SDL_GetError());
-    return FALSE;
-  }
+    throw std::runtime_error(std::string("SDL initialization failed: ") + std::string(SDL_GetError()));
 
   SDL_GL_SetAttribute( SDL_GL_RED_SIZE, 8 );
   SDL_GL_SetAttribute( SDL_GL_GREEN_SIZE, 8 );
@@ -218,10 +160,7 @@ int initGL()
                              SDL_WINDOWPOS_UNDEFINED,
                              1920, 1080,
                              SDL_WINDOW_FULLSCREEN_DESKTOP | SDL_WINDOW_OPENGL))==0)
-  {
-    fprintf(stderr, "Video init failed: %s\n", SDL_GetError());
-    return FALSE;
-  }
+    throw std::runtime_error(std::string("Video init failed: ") + std::string(SDL_GetError()));
   glctx = SDL_GL_CreateContext(surf);
   SDL_GL_GetDrawableSize(surf,&w,&h);
   SDL_GL_SetSwapInterval(1);
@@ -247,7 +186,6 @@ int initGL()
 
   glDepthFunc(GL_LEQUAL);
   glBlendFunc(GL_SRC_ALPHA,GL_ONE_MINUS_SRC_ALPHA);
-  return 1;
 }
 void swapBuffers() {
   SDL_GL_SwapWindow(surf);

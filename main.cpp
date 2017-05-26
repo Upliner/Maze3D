@@ -8,6 +8,9 @@
 #include <GL/gl.h>
 #include <GL/glu.h>
 
+#include <stdexcept>
+#include <iostream>
+
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -15,6 +18,7 @@
 #include "OpenGL.h"
 #include "input.h"
 #include "Level3D.h"
+
 #define Interval 30
 
 char *mapname=(char*)"1.map";
@@ -448,9 +452,16 @@ void quit(int code)
 
 int main( int argc, char* argv[] )
 {
-    initGL();
-    if (!LoadTextures())
+    try {
+        initGL();
+        LoadTextures();
+    } catch (std::exception &e) {
+        std::cerr << e.what();
         quit(1);
+    } catch (...) {
+        std::cerr << "Unknown error";
+        quit(1);
+    }
     createObjects();
     LoadLevel(mapname);
     t2=SDL_GetTicks();
