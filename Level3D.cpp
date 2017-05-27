@@ -36,7 +36,7 @@ void DrawObject(double x,double y,double z,word id,byte alpha = 255)
 void DrawLevelTile(int x,int y)
 { switch (Level[y][x].type)
   { case 1: DrawObject((x<<1)+2,(y<<1)+2,0,Optim[y][x]==1?BOX_OPTIM_CEILONLY:BOX);break;
-    case 2: DrawObject((x<<1)+2,(y<<1)+2,-(Moved[y][x]*0.0625),Optim[y][x]==1?BOX_OPTIM_CEILONLY:BOX,Moved[y][x]>24?(255-(Moved[y][x]<<5)):255);break;
+    case 2: DrawObject((x<<1)+2,(y<<1)+2,-(Moved[y][x]*0.02),Optim[y][x]==1?BOX_OPTIM_CEILONLY:BOX,255-(Moved[y][x]<<3));break;
     case 4: DrawObject((x<<1)+2,(y<<1)+2,0,JETPACK);break;
     case 5: DrawObject((x<<1)+2,(y<<1)+2,0,WALLD);break;
     case 6: DrawObject((x<<1)+2,(y<<1)+2,Moved[y][x]*0.2375,ONEPASS); if (Moved[y][x]) DrawObject((x<<1)+2,(y<<1)+2,(Moved[y][x]*0.25)-2,BOX);break;
@@ -70,7 +70,9 @@ float ang(int x, int y) {
     float x2 = yy * xrr - xx * yrr; float y2 = xx * xrr + yy * yrr;
     return atan2(x2,y2);
 }
+extern int traces;
 void TraceRecurse(int x, int y, float a, float b) {
+    traces++;
     if (x < 0 || y < 0 || x > 79 || y > 49) return;
     if (b <= a) return;
     if (TLevel(x,y) == 0) {
@@ -91,7 +93,8 @@ void RenderLevel()
     glCallList(EXTWALL);
 
     int x = (int)((xc-1)*0.5),y = (int)((yc-1)*0.5);
-    if (zc < 1) {
+    traces=0;
+    if (zc < 10) {
         memset(&Rend, 0, sizeof(Rend));
         xrr = -sin(xr*deg);
         yrr = cos(xr*deg);
@@ -177,7 +180,7 @@ bool CheckWall(int xf, int yf, float x, float y)
 {
   if (xf<0||yf<0||xf>79||yf>49) return false;
   if (((x+xi*0.5)>xf-0.6)&&((x+xi*0.5)<xf+0.6)&&((y+yi*0.5)>yf-0.6)&&((y+yi*0.5)<yf+0.6))
-  { if (Level[yf][xf].type == 15&&(zc>=FloorZ)){CeilZ = min(CeilZ,0.8f);}
+  { if (Level[yf][xf].type == 15&&(zc>=FloorZ)){if (zc >= 1.5) FloorZ = 2; else CeilZ = min(CeilZ,0.8f);}
     if (Level[yf][xf].type == 16&&(zc>=FloorZ)){CeilZ = min(CeilZ,2.8f);}
     if (Level[yf][xf].type == 1||Level[yf][xf].type == 2||Level[yf][xf].type == 14||Level[yf][xf].type == 17||(Level[yf][xf].type == 7&&Moved[yf][xf]!=31))
     { if ((Level[yf][xf].type == 2)&&(Moved[yf][xf] == 0)) DestroyWall(xf,yf);
@@ -186,7 +189,7 @@ bool CheckWall(int xf, int yf, float x, float y)
       if(x>=xf+0.599){xc=(float)((xf+0.6)*2)+2; xi = 0; return true;}
       if(y<=yf-0.599){yc=(float)((yf-0.6)*2)+2; yi = 0; return true;}
       if(y>=yf+0.599){yc=(float)((yf+0.6)*2)+2; yi = 0; return true;}
-      if ((Moved[yf][xf] == 0)||(Level[yf][xf].type != 2&&Level[yf][xf].type != 7)) {FloorZ = max(FloorZ,2);} else {if(FloorZ==0)FloorZ = (float)(2-(Moved[yf][xf]*0.0625));}
+      if ((Moved[yf][xf] == 0)||(Level[yf][xf].type != 2&&Level[yf][xf].type != 7)) {FloorZ = max(FloorZ,2);} else {if(FloorZ==0)FloorZ = (float)(2-(Moved[yf][xf]*0.02));}
       if (Level[yf][xf].type == 14){FloorZ = max(FloorZ,4);}
     }
   }
@@ -196,7 +199,7 @@ bool CheckTallWall(int xf, int yf, float x, float y)
 { if (xf<0||yf<0||xf>79||yf>49) return false;
   if (((x+xi*0.5)>xf-0.6)&&((x+xi*0.5)<xf+0.6)&&((y+yi*0.5)>yf-0.6)&&((y+yi*0.5)<yf+0.6))
   { if ( Level[yf][xf].type == 1 ||Level[yf][xf].type == 15 ||Level[yf][xf].type == 17){FloorZ = max(FloorZ,2);}
-    if ((Level[yf][xf].type == 16||Level[yf][xf].type == 17)&&(zc>=FloorZ)){CeilZ = min(CeilZ,2.8f);}
+    if ((Level[yf][xf].type == 16||Level[yf][xf].type == 17)&&(zc>=FloorZ)){if (zc >= 3.5) FloorZ = 4; else CeilZ = min(CeilZ,2.8f);}
     if (Level[yf][xf].type == 14)
     { if(x<xf-0.599){xc=(float)((xf-0.6)*2)+2; xi = 0; return true;}
       if(x>xf+0.599){xc=(float)((xf+0.6)*2)+2; xi = 0; return true;}

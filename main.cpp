@@ -341,7 +341,7 @@ void PDigit(double x,double y,byte dig,byte r, byte g,byte b,float s)
   glEnd();
   glEnable(GL_DEPTH_TEST);
 }
-
+int traces;
 void drawScene()
 {
     glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
@@ -373,14 +373,16 @@ void drawScene()
     glTexCoord2s(0,1);glVertex3d(-0.22,-0.18,-0.51);
     glEnd();
     glEnable(GL_DEPTH_TEST);
-int fps=0;
-if ((t2-t1)>0){fps = 1000/(t2-t1);}
-    if (health>=100)PDigit(-0.16,-0.2,health/100  ,0,255,0,0.02f);
+int fps=traces;
+//if ((t2-t1)>0){fps = 1000/(t2-t1);}
+    if (health>=100) PDigit(-0.16,-0.2,health/100  ,0,255,0,0.02f);
     if (health>=10) PDigit(-0.14,-0.2,health/10%10,health<70?255:0,health<30?0:255,0,0.02f);
-                    PDigit(-0.12,-0.2,health%10   ,health<70?255:0,health<30?0:255,0,0.02f);
-    if (fps>=100)PDigit(-0.26,0.19,fps/100  ,255,255,255,0.01f);
-    if (fps>=10) PDigit(-0.25,0.19,fps/10%10,255,255,255,0.01f);
-                 PDigit(-0.24,0.19,fps%10   ,255,255,255,0.01f);
+    PDigit(-0.12,-0.2,health%10   ,health<70?255:0,health<30?0:255,0,0.02f);
+    if (fps>=10000) PDigit(-0.28,0.19,fps/10000%10,255,255,255,0.01f);
+    if (fps>=1000) PDigit(-0.27,0.19,fps/1000%10,255,255,255,0.01f);
+    if (fps>=100) PDigit(-0.26,0.19,fps/100%10  ,255,255,255,0.01f);
+    if (fps>=10) PDigit(-0.25,0.19,fps/10%10    ,255,255,255,0.01f);
+    PDigit(-0.24,0.19,fps%10,255,255,255,0.01f);
     if (jet)
     { glEnable(GL_TEXTURE_2D); glBindTexture(GL_TEXTURE_2D,jetpack);
       glDisable(GL_DEPTH_TEST);
@@ -467,7 +469,7 @@ void Control()
 //#ifdef _DEBUG
 //        jet=true;
 //#endif
-        if (zc>FloorZ) zi -= (float)0.005;
+        if (zc>FloorZ) zi -= 0.005f;
         if (zc<FloorZ){if(zi>=-0.2f){zc=FloorZ+zi;zi=0;}else{zi=-zi/2;health-=min(health,int((zi*15)*(zi*15)*(zi*15)));tr=255;tg=0;tb=0;ta=min(255,(int)((zi*30)*(zi*30)*(zi*30)));}}
         if (zc<=(FloorZ+0.1f)){xi*=0.75F;yi*=0.75F;}else{xi*=0.995F;yi*=0.995F;zi*=0.995F;}
         if (zc>CeilZ){zc=CeilZ;zi=0;}
