@@ -20,8 +20,12 @@
 #define BOX_OPTIM_CEILONLY 32
 #define LEVELS 64
 
-#define min(a,b) ((a)<(b)?(a):(b))
-#define max(a,b) ((a)>(b)?(a):(b))
+inline double max(double a, double b) {
+    if (a>b) return a; else return b;
+}
+inline double min(double a, double b) {
+    if (a>b) return b; else return a;
+}
 
 typedef uint8_t byte;
 typedef uint16_t word;
