@@ -1,6 +1,3 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include <GL/glx.h>
 #include <GL/gl.h>
 #include <GL/glu.h>
 #include <math.h>
@@ -14,9 +11,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#include "Common.h"
 #include "OpenGL.h"
-#include "input.h"
 #include "Level3D.h"
 
 #define Interval 30
@@ -415,6 +410,7 @@ int fps=traces;
 }
 char keybuf[256];
 char ms[6];
+void quit(int code);
 static void process_events( void )
 {
   SDL_Event event;
@@ -424,7 +420,7 @@ static void process_events( void )
       case SDL_KEYUP:          if (event.key.keysym.scancode < 256) keybuf[event.key.keysym.scancode]=0;break;
       case SDL_MOUSEBUTTONDOWN:if (event.button.button < 6) ms[event.button.button]=1;break;
       case SDL_MOUSEBUTTONUP:  if (event.button.button < 6) ms[event.button.button]=0;break;
-      case SDL_QUIT:           SDL_Quit();exit(0);break;
+      case SDL_QUIT:           quit(0);break;
       case SDL_MOUSEMOTION: {
         xr+=(float)event.motion.xrel/4;
         yr+=(float)event.motion.yrel/8;
@@ -435,6 +431,15 @@ static void process_events( void )
   if (yr<-90) yr = -90;
   if (yr> 90) yr = 90;
 }
+#define KeyPressed(key) (keybuf[key])
+#define mr(x1,y1,x2,y2) ((x>=(x1))&&(y>=(y1))&&(x<=(x2))&&(y<=(y2)))
+#define LeftMouse (ms[1])
+#define MidMouse (ms[2])
+#define RightMouse (ms[3])
+#define LLMouse (ms[4])
+#define RRMouse (ms[5])
+#define MouseClick (ms[5]||ms[4]||ms[0]||ms[1]||ms[2]||ms[3])
+
 void Control()
 {
     float spd;

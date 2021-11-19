@@ -1,9 +1,9 @@
 #include "OpenGL.h"
-#include "Common.h"
 #include <stdio.h>
 #include <SDL2/SDL.h>
 #include <stdexcept>
 #include <sstream>
+#include <fstream>
 
 unsigned int wall,ground,jetpack,key,gr,hudh,font;
 
@@ -16,37 +16,38 @@ void TexParams(bool mipmap) {
     glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER,MgFilter);
     glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER,mipmap ? MpFilter : MnFilter);
 }
-void LoadBMPHeader(MyFile &f, int &w, int &h, int &bb) {
+void LoadBMPHeader(std::ifstream &f, char const *filename, int &w, int &h, int &bb) {
   BITMAPFILEHEADER fle;
   BITMAPINFOHEADER inf;
-  f.read(&fle,sizeof(fle));
+  f.read((char*)&fle,sizeof(fle));
   if (fle.bfType != 19778) {
     std::stringstream ss;
-    ss << "LoadBMP: bfType "<< fle.bfType << " is incorrect in " << f.filename;
+    ss << "LoadBMP: bfType "<< fle.bfType << " is incorrect in " << filename;
     throw std::runtime_error(ss.str());
   }
-  fseek(f.f,0x0e,SEEK_SET);
-  f.read(&inf,sizeof(inf));
-  fseek(f.f,fle.bfOffBits,SEEK_SET);
+  f.seekg(0x0e);
+  f.read((char*)&inf,sizeof(inf));
+  f.seekg(fle.bfOffBits);
   w = inf.biWidth;
   h = inf.biHeight;
   int bp = inf.biBitCount>>3;
   bb = (((w*bp)+3) & ~3);
   if (inf.biBitCount != 24) {
     std::stringstream ss;
-    ss << "LoadBMP: BitDepth " << inf.biBitCount << " is incorrect in " << f.filename;
+    ss << "LoadBMP: BitDepth " << inf.biBitCount << " is incorrect in " << filename;
     throw std::runtime_error(ss.str());
   }
 }
 void LoadBMP(char const *filename)
 {
-  MyFile f(filename);
+  std::ifstream f(filename, std::ifstream::binary);
+  f.exceptions(std::ifstream::failbit | std::ifstream::badbit | std::ifstream::eofbit);
   int w, h, bb;
-  LoadBMPHeader(f,w,h,bb);
+  LoadBMPHeader(f, filename,w,h,bb);
   int siz = bb * h;
   buffer vbuf(siz);
   byte *buf = vbuf.buf;
-  f.read(buf,siz);
+  f.read((char*)buf,siz);
   buffer pbuf(w*h*3);
   byte *Surf = pbuf.buf;
   int x;
@@ -65,13 +66,14 @@ void LoadBMP(char const *filename)
 }
 void LoadBMP_A(char const *filename,byte r,byte g,byte b, bool mipmap)
 {
-  MyFile f(filename);
+  std::ifstream f(filename, std::ifstream::binary);
+  f.exceptions(std::ifstream::failbit | std::ifstream::badbit | std::ifstream::eofbit);
   int w, h, bb;
-  LoadBMPHeader(f,w,h,bb);
+  LoadBMPHeader(f,filename,w,h,bb);
   int siz = bb * h;
   buffer vbuf(siz);
   byte *buf = vbuf.buf;
-  f.read(buf, siz);
+  f.read((char*)buf, siz);
   buffer pbuf(w*h*4);
   byte *Surf = pbuf.buf;
   int x;
@@ -133,7 +135,7 @@ void initGL()
   if((surf=SDL_CreateWindow("Maze3D",
                              SDL_WINDOWPOS_UNDEFINED,
                              SDL_WINDOWPOS_UNDEFINED,
-                             1920, 1080,
+                             0, 0,
                              SDL_WINDOW_FULLSCREEN_DESKTOP | SDL_WINDOW_OPENGL))==0)
     throw std::runtime_error(std::string("Video init failed: ") + std::string(SDL_GetError()));
   glctx = SDL_GL_CreateContext(surf);

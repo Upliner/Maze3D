@@ -1,10 +1,9 @@
 #include <list>
+#include <iostream>
+#include <fstream>
 #include "OpenGL.h"
-#include "Common.h"
 #include "Level3D.h"
 #include <math.h>
-#include <stdio.h>
-#include <stdlib.h>
 #include <string.h>
 typedef byte BLine[80];
 TLine Level[50];
@@ -36,7 +35,7 @@ void DrawObject(double x,double y,double z,word id,byte alpha = 255)
 void DrawLevelTile(int x,int y)
 { switch (Level[y][x].type)
   { case 1: DrawObject((x<<1)+2,(y<<1)+2,0,Optim[y][x]==1?BOX_OPTIM_CEILONLY:BOX);break;
-    case 2: DrawObject((x<<1)+2,(y<<1)+2,-(Moved[y][x]*0.02),Optim[y][x]==1?BOX_OPTIM_CEILONLY:BOX,255-(Moved[y][x]<<3));break;
+    case 2: DrawObject((x<<1)+2,(y<<1)+2,-(Moved[y][x]*0.0625),Optim[y][x]==1?BOX_OPTIM_CEILONLY:BOX,Moved[y][x]>24?(255-(Moved[y][x]<<5)):255);break;
     case 4: DrawObject((x<<1)+2,(y<<1)+2,0,JETPACK);break;
     case 5: DrawObject((x<<1)+2,(y<<1)+2,0,WALLD);break;
     case 6: DrawObject((x<<1)+2,(y<<1)+2,Moved[y][x]*0.2375,ONEPASS); if (Moved[y][x]) DrawObject((x<<1)+2,(y<<1)+2,(Moved[y][x]*0.25)-2,BOX);break;
@@ -210,6 +209,7 @@ bool CheckTallWall(int xf, int yf, float x, float y)
   return false;
 }
 
+void quit(int code);
 void ControlLevel()
 {
   int xf,yf;
@@ -239,7 +239,7 @@ void ControlLevel()
     }
   }
   if ((zc<0.2)&&(Level[yf][xf].type == 5)){Level[yf][xf].type = 0; wallds++;if (wlds_s == 0) wlds_s = 1;}
-  if ((zc<1.7)&&(Level[yf][xf].type == 100)) {fprintf(stderr,"you win"); quit(0);}
+  if ((zc<1.7)&&(Level[yf][xf].type == 100)) {std::cout << "you win"; quit(0);}
   if ((Level[yf][xf].type == 11)&&jet){jet=false;if(zc>FloorZ){xi=0;yi=0;}if (zi>0)zi=-0.05f;}
   if ((zc<1.7)&&(Level[yf][xf].type == 10))
   {xc=(float)Level[yf][xf].vx*2;yc=(float)Level[yf][xf].vy*2;zc=(Level[Level[yf][xf].vy-1][Level[yf][xf].vx-1].type)==1?2.0f:0.0f;tr=0;tb=0;tg=255;ta=255;xi=0;yi=0;zi=0;return;}
@@ -317,10 +317,11 @@ void CreateOptim()
 
 void LoadLevel(char const *filename)
 {
-    MyFile f(filename);
+    std::ifstream f(filename, std::ifstream::binary);
+    f.exceptions(std::ifstream::failbit | std::ifstream::badbit | std::ifstream::eofbit);
     word m;
-    f.read(&Level,sizeof(tile)*4000);
-    f.read(&m,2);m--;
+    f.read((char*)&Level,sizeof(tile)*4000);
+    f.read((char*)&m,2);m--;
     Level[m/80][m%80].type=100;
     ZeroMemory(Moved,4000);
     movs.clear();
